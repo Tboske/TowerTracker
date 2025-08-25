@@ -96,7 +96,9 @@ function showAverages() {
         Medals: ${avg.avgMedals}`;
 }
 
-function showEntries(selectedKeys = null) {
+let currentSort = { key: null, asc: true };
+
+function showEntries(selectedKeys = null, sortKey = null, asc = true) {
     const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
     let tableDiv = document.getElementById('entriesTable');
     if (!tableDiv) {
@@ -112,21 +114,44 @@ function showEntries(selectedKeys = null) {
         return;
     }
     const allKeys = getAllKeys(entries);
-    // Load selection from localStorage if not provided
     if (!selectedKeys) {
         const saved = JSON.parse(localStorage.getItem('towerTrackerSelectedColumns') || 'null');
         if (saved) selectedKeys = saved;
         else selectedKeys = allKeys;
     }
+
+    // Sort entries if sortKey is provided
+    let sortedEntries = [...entries];
+    if (sortKey) {
+        sortedEntries.sort((a, b) => {
+            let va = a[sortKey] || '';
+            let vb = b[sortKey] || '';
+            // Try to compare as numbers if possible
+            let na = parseFloat(va.replace(/[^\d\.\-]/g, ''));
+            let nb = parseFloat(vb.replace(/[^\d\.\-]/g, ''));
+            if (!isNaN(na) && !isNaN(nb)) {
+                return asc ? na - nb : nb - na;
+            }
+            // Otherwise compare as strings
+            if (va < vb) return asc ? -1 : 1;
+            if (va > vb) return asc ? 1 : -1;
+            return 0;
+        });
+    }
+
     let html = `<table style="width:100%;background:#23262f;color:#e4e6eb;border-radius:8px;border-collapse:collapse;">
         <thead>
             <tr>
                 <th style="width:32px; padding:2px 0; border-bottom:1px solid #31343e;"></th>
-                ${selectedKeys.map(k => `<th style="padding:4px;border-bottom:1px solid #31343e;">${k}</th>`).join('')}
+                ${selectedKeys.map(k => {
+                    let arrow = '';
+                    if (currentSort.key === k) arrow = currentSort.asc ? ' ▲' : ' ▼';
+                    return `<th style="padding:4px; border-bottom:1px solid #31343e; cursor:pointer;" onclick="orderByColumn('${k}')">${k}${arrow}</th>`;
+                }).join('')}
             </tr>
         </thead>
         <tbody>
-        ${entries.map((entry, idx) => `<tr>
+        ${sortedEntries.map((entry, idx) => `<tr>
             <td style="width:32px; padding:2px 0; border-bottom:1px solid #31343e; text-align:center;">
                 <button onclick="deleteEntry(${idx})" title="Delete" style="background:none;border:none;cursor:pointer;font-size:0.9em;color:#d9534f;line-height:1;">
                     &#10060;
@@ -139,15 +164,30 @@ function showEntries(selectedKeys = null) {
     tableDiv.innerHTML = html;
 }
 
-// Add this function to handle deletion
+// Add this function globally
+window.orderByColumn = function(key) {
+    // Toggle sort direction if same column, otherwise default to ascending
+    if (currentSort.key === key) {
+        currentSort.asc = !currentSort.asc;
+    } else {
+        currentSort.key = key;
+        currentSort.asc = true;
+    }
+    // Use selected columns from localStorage or all
+    const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
+    const allKeys = getAllKeys(entries);
+    let selectedKeys = JSON.parse(localStorage.getItem('towerTrackerSelectedColumns') || 'null');
+    if (!selectedKeys) selectedKeys = allKeys;
+    showEntries(selectedKeys, currentSort.key, currentSort.asc);
+};
+
 function deleteEntry(index) {
     const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
     entries.splice(index, 1);
     localStorage.setItem('towerTrackerEntries', JSON.stringify(entries));
     showAverages();
-    // Show all columns by default after deletion
     const allKeys = getAllKeys(entries);
-    showEntries(allKeys);
+    showEntries(allKeys, currentSort.key, currentSort.asc);
 }
 
 function showColumnSelector() {
