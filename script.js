@@ -286,17 +286,21 @@ function addColumnSelectorButton() {
     if (!btn) {
         btn = document.createElement('button');
         btn.id = 'columnSelectorBtn';
-        btn.textContent = 'Select Columns';
-        btn.style.margin = '1rem auto';
+        btn.title = 'Select Columns';
+        btn.innerHTML = '&#9881;'; // Unicode gear icon
+        btn.style.margin = '0.5rem auto';
         btn.style.display = 'block';
-        btn.style.maxWidth = '400px';
-        btn.style.background = '#4f8cff';
+        btn.style.maxWidth = '40px';
+        btn.style.width = '40px';
+        btn.style.height = '40px';
+        btn.style.background = '#31343e';
         btn.style.color = '#fff';
         btn.style.border = 'none';
-        btn.style.borderRadius = '6px';
-        btn.style.padding = '0.75rem';
-        btn.style.fontSize = '1.1rem';
+        btn.style.borderRadius = '50%';
+        btn.style.padding = '0';
+        btn.style.fontSize = '1.5rem';
         btn.style.cursor = 'pointer';
+        btn.style.textAlign = 'center';
         document.querySelector('main').appendChild(btn);
     }
     btn.onclick = showColumnSelector;
