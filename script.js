@@ -7,12 +7,11 @@ function parseGameData(data) {
             entry[match[1]] = match[2];
         }
     });
-    // Add date (day/month/year) and unique ascending number
+    // Add entry date (day/month/year) and unique ascending ID
     const now = new Date();
-    entry._timestamp = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getFullYear()}`;
-    let lastNumber = parseInt(localStorage.getItem('towerTrackerLastNumber') || '0', 10);
-    entry._entryNumber = lastNumber + 1;
-    localStorage.setItem('towerTrackerLastNumber', entry._entryNumber);
+    entry.ID = parseInt(localStorage.getItem('towerTrackerLastNumber') || '0', 10) + 1;
+    entry['Entry Date'] = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getFullYear()}`;
+    localStorage.setItem('towerTrackerLastNumber', entry.ID);
     return entry;
 }
 
@@ -69,13 +68,13 @@ function calculateAverages(entries) {
 }
 
 function getAllKeys(entries) {
-    // Always include _entryNumber and _timestamp as first keys after delete
+    // Always include ID and Entry Date as first keys after delete
     const keysSet = entries.reduce((set, entry) => {
         Object.keys(entry).forEach(k => set.add(k));
         return set;
     }, new Set());
-    const keys = Array.from(keysSet).filter(k => k !== '_entryNumber' && k !== '_timestamp');
-    return ['_entryNumber', '_timestamp', ...keys];
+    const keys = Array.from(keysSet).filter(k => k !== 'ID' && k !== 'Entry Date');
+    return ['ID', 'Entry Date', ...keys];
 }
 
 function showAverages() {
@@ -125,8 +124,8 @@ function showEntries(selectedKeys = null, sortKey = null, asc = true) {
         if (saved) selectedKeys = saved;
         else selectedKeys = allKeys;
     }
-    // Ensure _entryNumber and _timestamp are always first after delete column
-    selectedKeys = ['_entryNumber', '_timestamp', ...selectedKeys.filter(k => k !== '_entryNumber' && k !== '_timestamp')];
+    // Ensure ID and Entry Date are always first after delete column
+    selectedKeys = ['ID', 'Entry Date', ...selectedKeys.filter(k => k !== 'ID' && k !== 'Entry Date')];
 
     // Sort entries if sortKey is provided
     let sortedEntries = [...entries];
@@ -155,7 +154,7 @@ function showEntries(selectedKeys = null, sortKey = null, asc = true) {
                     let arrow = '';
                     if (currentSort.key === k) arrow = currentSort.asc ? ' ▲' : ' ▼';
                     // Human readable names for special columns
-                    let label = k === '_entryNumber' ? 'No.' : (k === '_timestamp' ? 'Date' : k);
+                    let label = k;
                     return `<th style="padding:4px; border-bottom:1px solid #31343e; cursor:pointer;" onclick="orderByColumn('${k}')">${label}${arrow}</th>`;
                 }).join('')}
             </tr>
