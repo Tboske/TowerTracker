@@ -119,12 +119,35 @@ function showEntries(selectedKeys = null) {
         else selectedKeys = allKeys;
     }
     let html = `<table style="width:100%;background:#23262f;color:#e4e6eb;border-radius:8px;border-collapse:collapse;">
-        <thead><tr>${selectedKeys.map(k => `<th style="padding:4px;border-bottom:1px solid #31343e;">${k}</th>`).join('')}</tr></thead>
+        <thead>
+            <tr>
+                <th style="width:32px; padding:2px 0; border-bottom:1px solid #31343e;"></th>
+                ${selectedKeys.map(k => `<th style="padding:4px;border-bottom:1px solid #31343e;">${k}</th>`).join('')}
+            </tr>
+        </thead>
         <tbody>
-        ${entries.map(entry => `<tr>${selectedKeys.map(k => `<td style="padding:4px;border-bottom:1px solid #31343e;">${entry[k] || ''}</td>`).join('')}</tr>`).join('')}
+        ${entries.map((entry, idx) => `<tr>
+            <td style="width:32px; padding:2px 0; border-bottom:1px solid #31343e; text-align:center;">
+                <button onclick="deleteEntry(${idx})" title="Delete" style="background:none;border:none;cursor:pointer;font-size:0.9em;color:#d9534f;line-height:1;">
+                    &#10060;
+                </button>
+            </td>
+            ${selectedKeys.map(k => `<td style="padding:4px;border-bottom:1px solid #31343e;">${entry[k] || ''}</td>`).join('')}
+        </tr>`).join('')}
         </tbody>
     </table>`;
     tableDiv.innerHTML = html;
+}
+
+// Add this function to handle deletion
+function deleteEntry(index) {
+    const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
+    entries.splice(index, 1);
+    localStorage.setItem('towerTrackerEntries', JSON.stringify(entries));
+    showAverages();
+    // Show all columns by default after deletion
+    const allKeys = getAllKeys(entries);
+    showEntries(allKeys);
 }
 
 function showColumnSelector() {
@@ -265,4 +288,3 @@ window.addEventListener('DOMContentLoaded', () => {
     showEntries(allKeys);
     addColumnSelectorButton();
 });
- 
