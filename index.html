@@ -15,6 +15,17 @@
         <textarea id="gameDataInput" placeholder="Paste your game data here..." rows="10" cols="50"></textarea>
         <button id="pasteClipboardBtn">Paste Clipboard</button>
         <button id="parseBtn">Parse</button>
+        <button id="columnSelectorBtn" title="Select Columns">&#9881;</button>
+
+        <div id="columnSelectorOverlay"></div>
+        <div id="columnSelector">
+            <strong>Select columns to display:</strong>
+            <form id="columnsForm" style="margin:1rem 0;flex:1;overflow-y:auto;"></form>
+            <div id="columnSelectorBtns">
+                <button type="submit" form="columnsForm" style="background:#4f8cff;color:#fff;border:none;padding:0.5rem 1rem;border-radius:6px;cursor:pointer;">Apply</button>
+                <button type="button" id="closeSelectorBtn" style="background:#31343e;color:#fff;border:none;padding:0.5rem 1rem;border-radius:6px;cursor:pointer;">Cancel</button>
+            </div>
+        </div>
     </main>
 </body>
 </html>

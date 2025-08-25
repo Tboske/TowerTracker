@@ -3,35 +3,30 @@ function parseGameData(data) {
     const entry = {};
     lines.forEach(line => {
         const match = line.match(/^\s*(.+?)\s{2,}(.+)$/);
-        if (match) {
-            entry[match[1]] = match[2];
-        }
+        if (match) entry[match[1]] = match[2];
     });
-    // Add entry date (day/month/year) and unique ascending ID
     const now = new Date();
     entry.ID = parseInt(localStorage.getItem('towerTrackerLastNumber') || '0', 10) + 1;
-    entry['Entry Date'] = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getFullYear()}`;
+    entry['Entry Date'] = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
     localStorage.setItem('towerTrackerLastNumber', entry.ID);
     return entry;
 }
 
 function saveEntry(entry) {
     const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
-    // Ensure ID and Entry Date are saved
     if (!entry.ID) {
         entry.ID = parseInt(localStorage.getItem('towerTrackerLastNumber') || '0', 10) + 1;
         localStorage.setItem('towerTrackerLastNumber', entry.ID);
     }
     if (!entry['Entry Date']) {
         const now = new Date();
-        entry['Entry Date'] = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getFullYear()}`;
+        entry['Entry Date'] = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
     }
     entries.push(entry);
     localStorage.setItem('towerTrackerEntries', JSON.stringify(entries));
 }
 
 function calculateAverages(entries) {
-    // Track more fields: Wave, Coins Earned, Cash Earned, Damage Dealt, Cells Earned, Medals
     let waveSum = 0, coinsSum = 0, cashSum = 0, damageSum = 0, cellsSum = 0, medalsSum = 0, count = 0;
     entries.forEach(e => {
         if (e['Wave']) {
@@ -40,14 +35,12 @@ function calculateAverages(entries) {
         }
         if (e['Coins Earned']) {
             let coins = e['Coins Earned'].replace(/[^\d\.]/g, '');
-            if (e['Coins Earned'].includes('B')) coins = parseFloat(coins) * 1e9;
-            else coins = parseFloat(coins);
+            coins = e['Coins Earned'].includes('B') ? parseFloat(coins) * 1e9 : parseFloat(coins);
             coinsSum += coins;
         }
         if (e['Cash Earned']) {
             let cash = e['Cash Earned'].replace(/[^\d\.]/g, '');
-            if (e['Cash Earned'].includes('M')) cash = parseFloat(cash) * 1e6;
-            else cash = parseFloat(cash);
+            cash = e['Cash Earned'].includes('M') ? parseFloat(cash) * 1e6 : parseFloat(cash);
             cashSum += cash;
         }
         if (e['Damage Dealt']) {
@@ -59,12 +52,8 @@ function calculateAverages(entries) {
             else dmg = parseFloat(dmg);
             damageSum += dmg;
         }
-        if (e['Cells Earned']) {
-            cellsSum += parseInt(e['Cells Earned'], 10);
-        }
-        if (e['Medals']) {
-            medalsSum += parseInt(e['Medals'], 10);
-        }
+        if (e['Cells Earned']) cellsSum += parseInt(e['Cells Earned'], 10);
+        if (e['Medals']) medalsSum += parseInt(e['Medals'], 10);
     });
     return {
         avgWave: count ? (waveSum / count).toFixed(2) : 'N/A',
@@ -77,37 +66,12 @@ function calculateAverages(entries) {
 }
 
 function getAllKeys(entries) {
-    // Always include ID and Entry Date as first keys after delete
     const keysSet = entries.reduce((set, entry) => {
         Object.keys(entry).forEach(k => set.add(k));
         return set;
     }, new Set());
-    const keys = Array.from(keysSet).filter(k => k !== 'ID' && k !== 'Entry Date');
-    return ['ID', 'Entry Date', ...keys];
-}
-
-function showAverages() {
-    const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
-    const avg = calculateAverages(entries);
-    let avgDiv = document.getElementById('averages');
-    if (!avgDiv) {
-        avgDiv = document.createElement('div');
-        avgDiv.id = 'averages';
-        avgDiv.style.margin = '2rem auto';
-        avgDiv.style.maxWidth = '400px';
-        avgDiv.style.background = '#23262f';
-        avgDiv.style.color = '#e4e6eb';
-        avgDiv.style.padding = '1rem';
-        avgDiv.style.borderRadius = '8px';
-        document.querySelector('main').appendChild(avgDiv);
-    }
-    avgDiv.innerHTML = `<strong>Averages:</strong><br>
-        Wave: ${avg.avgWave}<br>
-        Coins Earned: ${avg.avgCoins}<br>
-        Cash Earned: ${avg.avgCash}<br>
-        Damage Dealt: ${avg.avgDamage}<br>
-        Cells Earned: ${avg.avgCells}<br>
-        Medals: ${avg.avgMedals}`;
+    const keys = Array.from(keysSet).filter(k => k !== 'ID' && k !== 'Entry Date' && k !== '_averages');
+    return ['ID', 'Entry Date', ...keys, '_averages'];
 }
 
 let currentSort = { key: null, asc: true };
@@ -130,40 +94,33 @@ function showEntries(selectedKeys = null, sortKey = null, asc = true) {
     const allKeys = getAllKeys(entries);
     if (!selectedKeys) {
         const saved = JSON.parse(localStorage.getItem('towerTrackerSelectedColumns') || 'null');
-        if (saved) selectedKeys = saved;
-        else selectedKeys = allKeys;
+        selectedKeys = saved || allKeys;
     }
-    // Ensure ID and Entry Date are always first after delete column
     selectedKeys = ['ID', 'Entry Date', ...selectedKeys.filter(k => k !== 'ID' && k !== 'Entry Date')];
 
-    // Sort entries if sortKey is provided
     let sortedEntries = [...entries];
     if (sortKey) {
         sortedEntries.sort((a, b) => {
             let va = a[sortKey] || '';
             let vb = b[sortKey] || '';
-            // Try to compare as numbers if possible
             let na = parseFloat(va.replace(/[^\d\.\-]/g, ''));
             let nb = parseFloat(vb.replace(/[^\d\.\-]/g, ''));
-            if (!isNaN(na) && !isNaN(nb)) {
-                return asc ? na - nb : nb - na;
-            }
-            // Otherwise compare as strings
+            if (!isNaN(na) && !isNaN(nb)) return asc ? na - nb : nb - na;
             if (va < vb) return asc ? -1 : 1;
             if (va > vb) return asc ? 1 : -1;
             return 0;
         });
     }
 
+    const averages = calculateAverages(entries);
+
     let html = `<table style="width:100%;background:#23262f;color:#e4e6eb;border-radius:8px;border-collapse:collapse;">
         <thead>
             <tr>
                 <th style="width:32px; padding:2px 0; border-bottom:1px solid #31343e;"></th>
                 ${selectedKeys.map(k => {
-                    let arrow = '';
-                    if (currentSort.key === k) arrow = currentSort.asc ? ' ▲' : ' ▼';
-                    // Human readable names for special columns
-                    let label = k;
+                    let arrow = currentSort.key === k ? (currentSort.asc ? ' ▲' : ' ▼') : '';
+                    let label = k === '_averages' ? 'Averages' : k;
                     return `<th style="padding:4px; border-bottom:1px solid #31343e; cursor:pointer;" onclick="orderByColumn('${k}')">${label}${arrow}</th>`;
                 }).join('')}
             </tr>
@@ -171,31 +128,37 @@ function showEntries(selectedKeys = null, sortKey = null, asc = true) {
         <tbody>
         ${sortedEntries.map((entry, idx) => `<tr>
             <td style="width:32px; padding:2px 0; border-bottom:1px solid #31343e; text-align:center;">
-                <button onclick="deleteEntry(${idx})" title="Delete" style="background:none;border:none;cursor:pointer;font-size:0.9em;color:#d9534f;line-height:1;">
-                    &#10060;
-                </button>
+                <button onclick="deleteEntry(${idx})" title="Delete" class="delete-btn">&#10060;</button>
             </td>
-            ${selectedKeys.map(k => `<td style="padding:4px;border-bottom:1px solid #31343e;">${entry[k] || ''}</td>`).join('')}
+            ${selectedKeys.map(k => {
+                if (k === '_averages') {
+                    return `<td style="padding:4px;border-bottom:1px solid #31343e;">
+                        Wave: ${averages.avgWave}<br>
+                        Coins: ${averages.avgCoins}<br>
+                        Cash: ${averages.avgCash}<br>
+                        Damage: ${averages.avgDamage}<br>
+                        Cells: ${averages.avgCells}<br>
+                        Medals: ${averages.avgMedals}
+                    </td>`;
+                }
+                return `<td style="padding:4px;border-bottom:1px solid #31343e;">${entry[k] || ''}</td>`;
+            }).join('')}
         </tr>`).join('')}
         </tbody>
     </table>`;
     tableDiv.innerHTML = html;
 }
 
-// Add this function globally
 window.orderByColumn = function(key) {
-    // Toggle sort direction if same column, otherwise default to ascending
     if (currentSort.key === key) {
         currentSort.asc = !currentSort.asc;
     } else {
         currentSort.key = key;
         currentSort.asc = true;
     }
-    // Use selected columns from localStorage or all
     const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
     const allKeys = getAllKeys(entries);
-    let selectedKeys = JSON.parse(localStorage.getItem('towerTrackerSelectedColumns') || 'null');
-    if (!selectedKeys) selectedKeys = allKeys;
+    let selectedKeys = JSON.parse(localStorage.getItem('towerTrackerSelectedColumns') || 'null') || allKeys;
     showEntries(selectedKeys, currentSort.key, currentSort.asc);
 };
 
@@ -203,7 +166,6 @@ function deleteEntry(index) {
     const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
     entries.splice(index, 1);
     localStorage.setItem('towerTrackerEntries', JSON.stringify(entries));
-    showAverages();
     const allKeys = getAllKeys(entries);
     showEntries(allKeys, currentSort.key, currentSort.asc);
 }
@@ -211,109 +173,47 @@ function deleteEntry(index) {
 function showColumnSelector() {
     const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
     const allKeys = getAllKeys(entries);
-    // Load selection from localStorage or default
     let selectedKeys = JSON.parse(localStorage.getItem('towerTrackerSelectedColumns') || 'null');
-    if (!selectedKeys) {
-        selectedKeys = allKeys.filter(k => k !== 'Real Time'); // Default Real Time to false
-    }
-    let selectorDiv = document.getElementById('columnSelector');
-    if (!selectorDiv) {
-        selectorDiv = document.createElement('div');
-        selectorDiv.id = 'columnSelector';
-        selectorDiv.style.position = 'fixed';
-        selectorDiv.style.top = '50%';
-        selectorDiv.style.left = '50%';
-        selectorDiv.style.transform = 'translate(-50%, -50%)';
-        selectorDiv.style.background = '#23262f';
-        selectorDiv.style.color = '#e4e6eb';
-        selectorDiv.style.padding = '1rem';
-        selectorDiv.style.borderRadius = '12px';
-        selectorDiv.style.boxShadow = '0 2px 12px rgba(0,0,0,0.25)';
-        selectorDiv.style.zIndex = '1000';
-        selectorDiv.style.maxWidth = '90vw';
-        selectorDiv.style.maxHeight = '80vh';
-        selectorDiv.style.overflowY = 'auto';
-        selectorDiv.style.display = 'flex';
-        selectorDiv.style.flexDirection = 'column';
-        selectorDiv.style.alignItems = 'stretch';
+    if (!selectedKeys) selectedKeys = allKeys.filter(k => k !== 'Real Time');
 
-        // Overlay for click outside
-        let overlay = document.createElement('div');
-        overlay.id = 'columnSelectorOverlay';
-        overlay.style.position = 'fixed';
-        overlay.style.top = '0';
-        overlay.style.left = '0';
-        overlay.style.width = '100vw';
-        overlay.style.height = '100vh';
-        overlay.style.zIndex = '999';
-        overlay.style.background = 'rgba(0,0,0,0.2)';
-        document.body.appendChild(overlay);
+    // Build checkboxes
+    const form = document.getElementById('columnsForm');
+    form.innerHTML = allKeys.map(k => `
+        <label>
+            <input type="checkbox" name="col" value="${k}" ${selectedKeys.includes(k) ? 'checked' : ''}> ${k === '_averages' ? 'Averages' : k}
+        </label>
+    `).join('');
 
-        overlay.onclick = () => {
-            selectorDiv.remove();
-            overlay.remove();
-        };
+    // Show submenu and overlay
+    document.getElementById('columnSelector').style.display = 'flex';
+    document.getElementById('columnSelectorOverlay').style.display = 'block';
 
-        document.body.appendChild(selectorDiv);
-    }
-
-    selectorDiv.innerHTML = `
-        <strong>Select columns to display:</strong>
-        <form id="columnsForm" style="margin:1rem 0;flex:1;overflow-y:auto;">
-            ${allKeys.map(k => `<label style="display:block;margin-bottom:4px;">
-                <input type="checkbox" name="col" value="${k}" ${selectedKeys.includes(k) ? 'checked' : ''}> ${k}
-            </label>`).join('')}
-        </form>
-        <div style="display:flex;justify-content:flex-end;gap:1rem;">
-            <button type="submit" form="columnsForm" style="background:#4f8cff;color:#fff;border:none;padding:0.5rem 1rem;border-radius:6px;cursor:pointer;">Apply</button>
-            <button type="button" id="closeSelectorBtn" style="background:#31343e;color:#fff;border:none;padding:0.5rem 1rem;border-radius:6px;cursor:pointer;">Cancel</button>
-        </div>
-    `;
-
+    // Cancel button
     document.getElementById('closeSelectorBtn').onclick = () => {
-        selectorDiv.remove();
-        const overlay = document.getElementById('columnSelectorOverlay');
-        if (overlay) overlay.remove();
+        document.getElementById('columnSelector').style.display = 'none';
+        document.getElementById('columnSelectorOverlay').style.display = 'none';
     };
 
-    document.getElementById('columnsForm').onsubmit = function(e) {
+    // Apply button
+    form.onsubmit = function(e) {
         e.preventDefault();
-        const selected = Array.from(this.elements['col'])
+        const selected = Array.from(form.elements['col'])
             .filter(cb => cb.checked)
             .map(cb => cb.value);
-        // Save selection to localStorage
         localStorage.setItem('towerTrackerSelectedColumns', JSON.stringify(selected));
         showEntries(selected);
-        selectorDiv.remove();
-        const overlay = document.getElementById('columnSelectorOverlay');
-        if (overlay) overlay.remove();
+        document.getElementById('columnSelector').style.display = 'none';
+        document.getElementById('columnSelectorOverlay').style.display = 'none';
+    };
+
+    // Overlay click closes submenu
+    document.getElementById('columnSelectorOverlay').onclick = () => {
+        document.getElementById('columnSelector').style.display = 'none';
+        document.getElementById('columnSelectorOverlay').style.display = 'none';
     };
 }
 
-function addColumnSelectorButton() {
-    let btn = document.getElementById('columnSelectorBtn');
-    if (!btn) {
-        btn = document.createElement('button');
-        btn.id = 'columnSelectorBtn';
-        btn.title = 'Select Columns';
-        btn.innerHTML = '&#9881;'; // Unicode gear icon
-        btn.style.margin = '0.5rem auto';
-        btn.style.display = 'block';
-        btn.style.maxWidth = '40px';
-        btn.style.width = '40px';
-        btn.style.height = '40px';
-        btn.style.background = '#31343e';
-        btn.style.color = '#fff';
-        btn.style.border = 'none';
-        btn.style.borderRadius = '50%';
-        btn.style.padding = '0';
-        btn.style.fontSize = '1.5rem';
-        btn.style.cursor = 'pointer';
-        btn.style.textAlign = 'center';
-        document.querySelector('main').appendChild(btn);
-    }
-    btn.onclick = showColumnSelector;
-}
+document.getElementById('columnSelectorBtn').onclick = showColumnSelector;
 
 document.getElementById('pasteClipboardBtn').addEventListener('click', async () => {
     try {
@@ -332,7 +232,6 @@ document.getElementById('parseBtn').addEventListener('click', () => {
     if (validLines.length > 5) {
         const entry = parseGameData(data);
         saveEntry(entry);
-        showAverages();
         showEntries();
         alert('Parsed successfully!');
     } else {
@@ -341,10 +240,7 @@ document.getElementById('parseBtn').addEventListener('click', () => {
     input.value = '';
 });
 
-// Show averages, entries, and add column selector button on page load
 window.addEventListener('DOMContentLoaded', () => {
-    showAverages();
-    // Show all columns by default on page load
     const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
     const allKeys = getAllKeys(entries);
     showEntries(allKeys);
