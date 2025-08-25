@@ -112,11 +112,16 @@ function showEntries(selectedKeys = null) {
         return;
     }
     const allKeys = getAllKeys(entries);
-    const keysToShow = selectedKeys || allKeys;
+    // Load selection from localStorage if not provided
+    if (!selectedKeys) {
+        const saved = JSON.parse(localStorage.getItem('towerTrackerSelectedColumns') || 'null');
+        if (saved) selectedKeys = saved;
+        else selectedKeys = allKeys;
+    }
     let html = `<table style="width:100%;background:#23262f;color:#e4e6eb;border-radius:8px;border-collapse:collapse;">
-        <thead><tr>${keysToShow.map(k => `<th style="padding:4px;border-bottom:1px solid #31343e;">${k}</th>`).join('')}</tr></thead>
+        <thead><tr>${selectedKeys.map(k => `<th style="padding:4px;border-bottom:1px solid #31343e;">${k}</th>`).join('')}</tr></thead>
         <tbody>
-        ${entries.map(entry => `<tr>${keysToShow.map(k => `<td style="padding:4px;border-bottom:1px solid #31343e;">${entry[k] || ''}</td>`).join('')}</tr>`).join('')}
+        ${entries.map(entry => `<tr>${selectedKeys.map(k => `<td style="padding:4px;border-bottom:1px solid #31343e;">${entry[k] || ''}</td>`).join('')}</tr>`).join('')}
         </tbody>
     </table>`;
     tableDiv.innerHTML = html;
@@ -125,6 +130,11 @@ function showEntries(selectedKeys = null) {
 function showColumnSelector() {
     const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
     const allKeys = getAllKeys(entries);
+    // Load selection from localStorage or default
+    let selectedKeys = JSON.parse(localStorage.getItem('towerTrackerSelectedColumns') || 'null');
+    if (!selectedKeys) {
+        selectedKeys = allKeys.filter(k => k !== 'Real Time'); // Default Real Time to false
+    }
     let selectorDiv = document.getElementById('columnSelector');
     if (!selectorDiv) {
         selectorDiv = document.createElement('div');
@@ -170,7 +180,7 @@ function showColumnSelector() {
         <strong>Select columns to display:</strong>
         <form id="columnsForm" style="margin:1rem 0;flex:1;overflow-y:auto;">
             ${allKeys.map(k => `<label style="display:block;margin-bottom:4px;">
-                <input type="checkbox" name="col" value="${k}" checked> ${k}
+                <input type="checkbox" name="col" value="${k}" ${selectedKeys.includes(k) ? 'checked' : ''}> ${k}
             </label>`).join('')}
         </form>
         <div style="display:flex;justify-content:flex-end;gap:1rem;">
@@ -190,6 +200,8 @@ function showColumnSelector() {
         const selected = Array.from(this.elements['col'])
             .filter(cb => cb.checked)
             .map(cb => cb.value);
+        // Save selection to localStorage
+        localStorage.setItem('towerTrackerSelectedColumns', JSON.stringify(selected));
         showEntries(selected);
         selectorDiv.remove();
         const overlay = document.getElementById('columnSelectorOverlay');
@@ -247,6 +259,10 @@ document.getElementById('parseBtn').addEventListener('click', () => {
 // Show averages, entries, and add column selector button on page load
 window.addEventListener('DOMContentLoaded', () => {
     showAverages();
-    showEntries();
+    // Show all columns by default on page load
+    const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
+    const allKeys = getAllKeys(entries);
+    showEntries(allKeys);
     addColumnSelectorButton();
 });
+ 
