@@ -17,6 +17,15 @@ function parseGameData(data) {
 
 function saveEntry(entry) {
     const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
+    // Ensure ID and Entry Date are saved
+    if (!entry.ID) {
+        entry.ID = parseInt(localStorage.getItem('towerTrackerLastNumber') || '0', 10) + 1;
+        localStorage.setItem('towerTrackerLastNumber', entry.ID);
+    }
+    if (!entry['Entry Date']) {
+        const now = new Date();
+        entry['Entry Date'] = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getFullYear()}`;
+    }
     entries.push(entry);
     localStorage.setItem('towerTrackerEntries', JSON.stringify(entries));
 }
