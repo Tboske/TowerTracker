@@ -7,7 +7,12 @@ function parseGameData(data) {
             entry[match[1]] = match[2];
         }
     });
-    entry._timestamp = new Date().toLocaleString(); // Add timestamp for each entry
+    // Add date (day/month/year) and unique ascending number
+    const now = new Date();
+    entry._timestamp = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getFullYear()}`;
+    let lastNumber = parseInt(localStorage.getItem('towerTrackerLastNumber') || '0', 10);
+    entry._entryNumber = lastNumber + 1;
+    localStorage.setItem('towerTrackerLastNumber', entry._entryNumber);
     return entry;
 }
 
@@ -64,12 +69,13 @@ function calculateAverages(entries) {
 }
 
 function getAllKeys(entries) {
-    return Array.from(
-        entries.reduce((set, entry) => {
-            Object.keys(entry).forEach(k => set.add(k));
-            return set;
-        }, new Set())
-    );
+    // Always include _entryNumber and _timestamp as first keys after delete
+    const keysSet = entries.reduce((set, entry) => {
+        Object.keys(entry).forEach(k => set.add(k));
+        return set;
+    }, new Set());
+    const keys = Array.from(keysSet).filter(k => k !== '_entryNumber' && k !== '_timestamp');
+    return ['_entryNumber', '_timestamp', ...keys];
 }
 
 function showAverages() {
@@ -119,6 +125,8 @@ function showEntries(selectedKeys = null, sortKey = null, asc = true) {
         if (saved) selectedKeys = saved;
         else selectedKeys = allKeys;
     }
+    // Ensure _entryNumber and _timestamp are always first after delete column
+    selectedKeys = ['_entryNumber', '_timestamp', ...selectedKeys.filter(k => k !== '_entryNumber' && k !== '_timestamp')];
 
     // Sort entries if sortKey is provided
     let sortedEntries = [...entries];
@@ -146,7 +154,9 @@ function showEntries(selectedKeys = null, sortKey = null, asc = true) {
                 ${selectedKeys.map(k => {
                     let arrow = '';
                     if (currentSort.key === k) arrow = currentSort.asc ? ' ▲' : ' ▼';
-                    return `<th style="padding:4px; border-bottom:1px solid #31343e; cursor:pointer;" onclick="orderByColumn('${k}')">${k}${arrow}</th>`;
+                    // Human readable names for special columns
+                    let label = k === '_entryNumber' ? 'No.' : (k === '_timestamp' ? 'Date' : k);
+                    return `<th style="padding:4px; border-bottom:1px solid #31343e; cursor:pointer;" onclick="orderByColumn('${k}')">${label}${arrow}</th>`;
                 }).join('')}
             </tr>
         </thead>
