@@ -37,9 +37,10 @@ main {
 .top-actions {
     display: flex;
     gap: 0.5rem;
-    justify-content: center;
+    justify-content: flex-start;
+    align-items: center;      /* Ensure vertical alignment */
     margin-bottom: 1rem;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;        /* Prevent wrapping to next line */
 }
 
 button, input[type="submit"] {
@@ -74,6 +75,7 @@ button:active, input[type="submit"]:active {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    vertical-align: middle;
 }
 
 .category-table {
