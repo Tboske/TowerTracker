@@ -75,11 +75,11 @@ function showCombinedTable(entries) {
         <table>
             <thead>
                 <tr>
-                    <th style="min-width:160px;position:sticky;left:0;top:0;z-index:3;background:var(--card-bg);"></th>
+                    <th class="sticky-col"></th>
                     ${sortedEntries.map((entry, idx) =>
                         `<th style="min-width:80px;position:sticky;top:0;z-index:2;background:var(--card-bg);">
-                            <div><strong>#</strong>${entry.ID || idx + 1}</div>
-                            <div style="font-size:0.9em;color:var(--text-muted);">${entry['Entry Date'] || ''}</div>
+                            <div class="entry-id">ID: ${entry.ID || idx + 1}</div>
+                            <div class="entry-date">Date: ${entry['Entry Date'] || ''}</div>
                             <button onclick="deleteEntry(${entries.indexOf(entry)})" title="Delete" class="delete-btn">&#10060;</button>
                         </th>`
                     ).join('')}
@@ -92,13 +92,11 @@ function showCombinedTable(entries) {
                     let sectionHtml = '';
                     if (section) {
                         sectionHtml = `<tr class="section-row">
-                            <td colspan="${sortedEntries.length + 1}" style="background:var(--accent);color:#fff;font-weight:bold;text-align:left;position:sticky;left:0;top:0;z-index:20;">
-                                ${section.label}
-                            </td>
+                            <td colspan="${sortedEntries.length + 1}">${section.label}</td>
                         </tr>`;
                     }
                     return sectionHtml + `<tr>
-                        <td style="position:sticky;left:0;z-index:1;background:var(--card-bg);"><strong>${key}</strong></td>
+                        <td class="sticky-col"><strong>${key}</strong></td>
                         ${sortedEntries.map(entry => `<td>${entry[key] || ''}</td>`).join('')}
                     </tr>`;
                 }).join('')}
