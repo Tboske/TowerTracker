@@ -2,8 +2,9 @@ function parseGameData(data) {
     const lines = data.trim().split('\n');
     const entry = {};
     lines.forEach(line => {
-        const match = line.match(/^\s*(.+?)\s{2,}(.+)$/);
-        if (match) entry[match[1]] = match[2];
+        // Split on first whitespace (space or tab)
+        const match = line.match(/^(.+?)\s+(.+)$/);
+        if (match) entry[match[1].trim()] = match[2].trim();
     });
     const now = new Date();
     entry.ID = parseInt(localStorage.getItem('towerTrackerLastNumber') || '0', 10) + 1;
@@ -321,9 +322,7 @@ window.addEventListener('DOMContentLoaded', () => {
 document.getElementById('pasteClipboardBtn').addEventListener('click', async () => {
     try {
         const text = await navigator.clipboard.readText();
-        const lines = text.trim().split('\n');
-        const validLines = lines.filter(line => line.match(/^\s*\S.+?\s{2,}.+/));
-        if (validLines.length > 5) {
+        if (text.trim().length > 0) {
             const entry = parseGameData(text);
             saveEntry(entry);
             showAllCategoryTables();
