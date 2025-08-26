@@ -234,12 +234,144 @@ function getCategoryKeys(category, entries) {
     return ['ID', 'Entry Date', ...categoryFields.filter(k => k !== 'ID' && k !== 'Entry Date')];
 }
 
-// Render a table for a category
+// Store table visibility in localStorage
+function getVisibleTables() {
+    const stored = localStorage.getItem('towerTrackerVisibleTables');
+    if (stored) return JSON.parse(stored);
+    // Default: all tables visible
+    return Object.keys(CATEGORY_FIELDS).reduce((obj, cat) => { obj[cat] = true; return obj; }, {});
+}
+
+function setVisibleTables(obj) {
+    localStorage.setItem('towerTrackerVisibleTables', JSON.stringify(obj));
+}
+
+// Store visible columns per table in localStorage
+function getVisibleColumns(table) {
+    const stored = localStorage.getItem('towerTrackerVisibleColumns');
+    if (stored) {
+        const obj = JSON.parse(stored);
+        return obj[table] || getCategoryKeys(table, []);
+    }
+    // Default: all columns visible
+    return getCategoryKeys(table, []);
+}
+
+function setVisibleColumns(table, columns) {
+    let obj = {};
+    const stored = localStorage.getItem('towerTrackerVisibleColumns');
+    if (stored) obj = JSON.parse(stored);
+    obj[table] = columns;
+    localStorage.setItem('towerTrackerVisibleColumns', JSON.stringify(obj));
+}
+
+// Settings UI (with overlay for click outside)
+function showSettings() {
+    const tables = Object.keys(CATEGORY_FIELDS);
+    const visibleTables = getVisibleTables();
+    let settingsDiv = document.getElementById('settingsPanel');
+    let overlay = document.getElementById('settingsOverlay');
+
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'settingsOverlay';
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100vw';
+        overlay.style.height = '100vh';
+        overlay.style.zIndex = '2999';
+        overlay.style.background = 'rgba(0,0,0,0.2)';
+        document.body.appendChild(overlay);
+    }
+    overlay.style.display = 'block';
+
+    if (!settingsDiv) {
+        settingsDiv = document.createElement('div');
+        settingsDiv.id = 'settingsPanel';
+        settingsDiv.style.position = 'fixed';
+        settingsDiv.style.top = '50%';
+        settingsDiv.style.left = '50%';
+        settingsDiv.style.transform = 'translate(-50%, -50%)';
+        settingsDiv.style.background = '#23262f';
+        settingsDiv.style.color = '#e4e6eb';
+        settingsDiv.style.padding = '1rem';
+        settingsDiv.style.borderRadius = '12px';
+        settingsDiv.style.boxShadow = '0 2px 12px rgba(0,0,0,0.25)';
+        settingsDiv.style.zIndex = '3000';
+        settingsDiv.style.maxWidth = '90vw';
+        settingsDiv.style.maxHeight = '80vh';
+        settingsDiv.style.overflowY = 'auto';
+        document.body.appendChild(settingsDiv);
+    }
+
+    let html = `<strong>Show/Hide Tables & Columns</strong><br><br>`;
+    tables.forEach(table => {
+        const columns = getCategoryKeys(table, []);
+        const visibleCols = getVisibleColumns(table);
+        html += `<div style="margin-bottom:1rem;">
+            <label>
+                <input type="checkbox" class="table-toggle" data-table="${table}" ${visibleTables[table] ? 'checked' : ''}>
+                <strong>${table}</strong>
+            </label>
+            <div style="margin-left:1.5rem;">
+                ${columns.map(col => `
+                    <label style="margin-right:1rem;">
+                        <input type="checkbox" class="col-toggle" data-table="${table}" value="${col}" ${visibleCols.includes(col) ? 'checked' : ''}>
+                        ${col}
+                    </label>
+                `).join('')}
+            </div>
+        </div>`;
+    });
+    html += `<div style="display:flex;justify-content:flex-end;gap:1rem;">
+        <button id="settingsApplyBtn" style="background:#4f8cff;color:#fff;border:none;padding:0.5rem 1rem;border-radius:6px;cursor:pointer;">Apply</button>
+        <button id="settingsCancelBtn" style="background:#31343e;color:#fff;border:none;padding:0.5rem 1rem;border-radius:6px;cursor:pointer;">Cancel</button>
+    </div>`;
+    settingsDiv.innerHTML = html;
+    settingsDiv.style.display = 'block';
+
+    document.getElementById('settingsCancelBtn').onclick = () => {
+        settingsDiv.style.display = 'none';
+        overlay.style.display = 'none';
+    };
+
+    document.getElementById('settingsApplyBtn').onclick = () => {
+        // Tables
+        const tableToggles = settingsDiv.querySelectorAll('.table-toggle');
+        let newVisibleTables = {};
+        tableToggles.forEach(cb => {
+            newVisibleTables[cb.dataset.table] = cb.checked;
+        });
+        setVisibleTables(newVisibleTables);
+
+        // Columns
+        let newVisibleColumns = {};
+        tables.forEach(table => {
+            const colToggles = settingsDiv.querySelectorAll(`.col-toggle[data-table="${table}"]`);
+            newVisibleColumns[table] = Array.from(colToggles).filter(cb => cb.checked).map(cb => cb.value);
+        });
+        localStorage.setItem('towerTrackerVisibleColumns', JSON.stringify(newVisibleColumns));
+
+        showAllCategoryTables();
+        settingsDiv.style.display = 'none';
+        overlay.style.display = 'none';
+    };
+
+    // Close settings when clicking outside the panel
+    overlay.onclick = function (e) {
+        settingsDiv.style.display = 'none';
+        overlay.style.display = 'none';
+    };
+}
+
+// Update showCategoryTable to use visible columns and table visibility
 function showCategoryTable(category, entries, sortKey = null, asc = true) {
-    const keys = getCategoryKeys(category, entries);
+    const visibleTables = getVisibleTables();
+    if (!visibleTables[category]) return '';
+    const keys = getVisibleColumns(category);
     if (keys.length === 0) return '';
 
-    // Sort entries if needed
     let sortedEntries = [...entries];
     if (sortKey && keys.includes(sortKey)) {
         sortedEntries.sort((a, b) => {
@@ -277,7 +409,7 @@ function showCategoryTable(category, entries, sortKey = null, asc = true) {
     return html;
 }
 
-// Render all category tables
+// Update showAllCategoryTables to use new showCategoryTable
 function showAllCategoryTables() {
     const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
     const container = document.getElementById('entriesTablesContainer');
@@ -392,50 +524,11 @@ function deleteEntry(index) {
     showAllCategoryTables();
 }
 
-function showColumnSelector() {
-    const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
-    const allKeys = getAllKeys(entries);
-    let selectedKeys = JSON.parse(localStorage.getItem('towerTrackerSelectedColumns') || 'null');
-    if (!selectedKeys) selectedKeys = allKeys.filter(k => k !== 'Real Time');
+document.getElementById('settingsBtn').onclick = showSettings;
 
-    // Build checkboxes
-    const form = document.getElementById('columnsForm');
-    form.innerHTML = allKeys.map(k => `
-        <label>
-            <input type="checkbox" name="col" value="${k}" ${selectedKeys.includes(k) ? 'checked' : ''}> ${k === '_averages' ? 'Averages' : k}
-        </label>
-    `).join('');
-
-    // Show submenu and overlay
-    document.getElementById('columnSelector').style.display = 'flex';
-    document.getElementById('columnSelectorOverlay').style.display = 'block';
-
-    // Cancel button
-    document.getElementById('closeSelectorBtn').onclick = () => {
-        document.getElementById('columnSelector').style.display = 'none';
-        document.getElementById('columnSelectorOverlay').style.display = 'none';
-    };
-
-    // Apply button
-    form.onsubmit = function(e) {
-        e.preventDefault();
-        const selected = Array.from(form.elements['col'])
-            .filter(cb => cb.checked)
-            .map(cb => cb.value);
-        localStorage.setItem('towerTrackerSelectedColumns', JSON.stringify(selected));
-        showEntries(selected);
-        document.getElementById('columnSelector').style.display = 'none';
-        document.getElementById('columnSelectorOverlay').style.display = 'none';
-    };
-
-    // Overlay click closes submenu
-    document.getElementById('columnSelectorOverlay').onclick = () => {
-        document.getElementById('columnSelector').style.display = 'none';
-        document.getElementById('columnSelectorOverlay').style.display = 'none';
-    };
-}
-
-document.getElementById('columnSelectorBtn').onclick = showColumnSelector;
+window.addEventListener('DOMContentLoaded', () => {
+    showAllCategoryTables();
+});
 
 document.getElementById('pasteClipboardBtn').addEventListener('click', async () => {
     try {
@@ -458,7 +551,6 @@ document.getElementById('pasteClipboardBtn').addEventListener('click', async () 
 // On page load, show all tables
 window.addEventListener('DOMContentLoaded', () => {
     showAllCategoryTables();
-    addColumnSelectorButton();
 });
 
 document.getElementById('helpBtn').onclick = function() {
