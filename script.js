@@ -218,26 +218,19 @@ document.getElementById('columnSelectorBtn').onclick = showColumnSelector;
 document.getElementById('pasteClipboardBtn').addEventListener('click', async () => {
     try {
         const text = await navigator.clipboard.readText();
-        document.getElementById('gameDataInput').value = text;
+        const lines = text.trim().split('\n');
+        const validLines = lines.filter(line => line.match(/^\s*\S.+?\s{2,}.+/));
+        if (validLines.length > 5) {
+            const entry = parseGameData(text);
+            saveEntry(entry);
+            showEntries();
+            alert('Parsed successfully!');
+        } else {
+            alert('Parse failed!');
+        }
     } catch (err) {
         alert('Failed to read clipboard!');
     }
-});
-
-document.getElementById('parseBtn').addEventListener('click', () => {
-    const input = document.getElementById('gameDataInput');
-    const data = input.value;
-    const lines = data.trim().split('\n');
-    const validLines = lines.filter(line => line.match(/^\s*\S.+?\s{2,}.+/));
-    if (validLines.length > 5) {
-        const entry = parseGameData(data);
-        saveEntry(entry);
-        showEntries();
-        alert('Parsed successfully!');
-    } else {
-        alert('Parse failed!');
-    }
-    input.value = '';
 });
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -246,3 +239,14 @@ window.addEventListener('DOMContentLoaded', () => {
     showEntries(allKeys);
     addColumnSelectorButton();
 });
+
+document.getElementById('helpBtn').onclick = function() {
+    alert(
+        "TowerTracker Help:\n\n" +
+        "- Click 'Paste & Parse Clipboard' to import and save your game stats from the clipboard.\n" +
+        "- Use the gear button to select which columns to display.\n" +
+        "- Click the red X to delete an entry.\n" +
+        "- Click column headers to sort.\n" +
+        "- Your data is saved locally in your browser."
+    );
+};

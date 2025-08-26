@@ -12,9 +12,10 @@
         <h1>TowerTracker</h1>
     </header>
     <main>
-        <textarea id="gameDataInput" placeholder="Paste your game data here..." rows="10" cols="50"></textarea>
-        <button id="pasteClipboardBtn">Paste Clipboard</button>
-        <button id="parseBtn">Parse</button>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <button id="pasteClipboardBtn">Paste & Parse Clipboard</button>
+            <button id="helpBtn" title="Help" class="help-btn">&#10068;</button>
+        </div>
         <button id="columnSelectorBtn" title="Select Columns">&#9881;</button>
 
         <div id="columnSelectorOverlay"></div>
