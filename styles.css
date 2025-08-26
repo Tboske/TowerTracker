@@ -120,6 +120,51 @@ button:active, input[type="submit"]:active {
     font-size: 0.95rem;
 }
 
+/* Fixed width for first column, enough for longest label */
+.category-table table th:first-child,
+.category-table table td:first-child {
+    min-width: 160px;
+    max-width: 220px;
+    width: 180px;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--card-bg);
+    white-space: pre-line;
+    font-weight: bold;
+    text-align: left;
+}
+
+/* Other columns remain flexible and scrollable */
+.category-table table th,
+.category-table table td {
+    padding: 6px;
+    border-bottom: 1px solid #31343e;
+    text-align: left;
+    word-break: break-word;
+    min-width: 80px;
+    max-width: 220px;
+    background: var(--card-bg);
+}
+
+.category-table table th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+/* Section header row style */
+.category-table table tr td[colspan] {
+    background: var(--accent);
+    color: #fff;
+    font-weight: bold;
+    text-align: left;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    font-size: 1.05em;
+}
+
 .category-table th, .category-table td {
     padding: 6px;
     border-bottom: 1px solid #31343e;
