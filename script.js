@@ -79,45 +79,6 @@ function saveEntry(entry) {
     localStorage.setItem('towerTrackerEntries', JSON.stringify(entries));
 }
 
-function calculateAverages(entries) {
-    let waveSum = 0, coinsSum = 0, cashSum = 0, damageSum = 0, cellsSum = 0, medalsSum = 0, count = 0;
-    entries.forEach(e => {
-        if (e['Wave']) {
-            waveSum += parseInt(e['Wave'], 10);
-            count++;
-        }
-        if (e['Coins Earned']) {
-            let coins = e['Coins Earned'].replace(/[^\d\.]/g, '');
-            coins = e['Coins Earned'].includes('B') ? parseFloat(coins) * 1e9 : parseFloat(coins);
-            coinsSum += coins;
-        }
-        if (e['Cash Earned']) {
-            let cash = e['Cash Earned'].replace(/[^\d\.]/g, '');
-            cash = e['Cash Earned'].includes('M') ? parseFloat(cash) * 1e6 : parseFloat(cash);
-            cashSum += cash;
-        }
-        if (e['Damage Dealt']) {
-            let dmg = e['Damage Dealt'].replace(/[^\d\.]/g, '');
-            if (e['Damage Dealt'].includes('S')) dmg = parseFloat(dmg) * 1e18;
-            else if (e['Damage Dealt'].includes('Q')) dmg = parseFloat(dmg) * 1e15;
-            else if (e['Damage Dealt'].includes('T')) dmg = parseFloat(dmg) * 1e12;
-            else if (e['Damage Dealt'].includes('B')) dmg = parseFloat(dmg) * 1e9;
-            else dmg = parseFloat(dmg);
-            damageSum += dmg;
-        }
-        if (e['Cells Earned']) cellsSum += parseInt(e['Cells Earned'], 10);
-        if (e['Medals']) medalsSum += parseInt(e['Medals'], 10);
-    });
-    return {
-        avgWave: count ? (waveSum / count).toFixed(2) : 'N/A',
-        avgCoins: count ? (coinsSum / count).toFixed(2) : 'N/A',
-        avgCash: count ? (cashSum / count).toFixed(2) : 'N/A',
-        avgDamage: count ? (damageSum / count).toFixed(2) : 'N/A',
-        avgCells: count ? (cellsSum / count).toFixed(2) : 'N/A',
-        avgMedals: count ? (medalsSum / count).toFixed(2) : 'N/A'
-    };
-}
-
 function getAllKeys(entries) {
     const keysSet = entries.reduce((set, entry) => {
         Object.keys(entry).forEach(k => set.add(k));
@@ -130,73 +91,27 @@ function getAllKeys(entries) {
 // Define fields for each category
 const CATEGORY_FIELDS = {
     "Battle Report": [
-        "ID",
-        "Entry Date",
-        "Game Time",
-        "Real Time",
-        "Wave",
-        "Coins Earned",
-        "Coins Earned Rate",
-        "Cash Earned",
-        "Cash Earning Rate",
-        "Interest Earned",
-        "Gem Blocks Tapped",
-        "Cells Earned",
-        "Cells Earned Rate",
-        "Reroll Shards Earned",
-        "Reroll Shards Earned Rate"
+        "ID", "Entry Date", "Game Time", "Real Time", "Wave", "Coins Earned", "Coins Earned Rate",
+        "Cash Earned", "Cash Earning Rate", "Interest Earned", "Gem Blocks Tapped",
+        "Cells Earned", "Cells Earned Rate", "Reroll Shards Earned", "Reroll Shards Earned Rate"
     ],
     "Coins": [
-        "ID",
-        "Entry Date",
-        "Coins Earned",
-        "Coins Earned Rate",
-        "Coins from Death Wave",
-        "Coins from Golden Tower",
-        "Coins from Blackhole",
-        "Coins from Spotlight",
-        "Coins from Orbs",
-        "Coins from Coin Upgrade",
-        "Coins from Coin Bonuses",
-        "Golden bot coins earned",
-        "Coins Stolen",
-        "Coins Fetched"
+        "ID", "Entry Date", "Coins Earned", "Coins Earned Rate", "Coins from Death Wave",
+        "Coins from Golden Tower", "Coins from Blackhole", "Coins from Spotlight", "Coins from Orbs",
+        "Coins from Coin Upgrade", "Coins from Coin Bonuses", "Golden bot coins earned",
+        "Coins Stolen", "Coins Fetched"
     ],
     "Combat": [
-        "Damage Dealt Rate",
-        "Damage Taken",
-        "Damage Taken Wall",
-        "Damage Taken While Berserked",
-        "Damage Gain From Berserk",
-        "Death Defy",
-        "Lifesteal",
-        "Damage Dealt",
-        "Projectiles Damage",
-        "Projectiles Count",
-        "Thorn Damage",
-        "Orb Damage",
-        "Land Mine Damage",
-        "Land Mines Spawned",
-        "Rend Armor Damage",
-        "Death Ray Damage",
-        "Smart Missile Damage"
+        "Damage Dealt Rate", "Damage Taken", "Damage Taken Wall", "Damage Taken While Berserked",
+        "Damage Gain From Berserk", "Death Defy", "Lifesteal", "Damage Dealt", "Projectiles Damage",
+        "Projectiles Count", "Thorn Damage", "Orb Damage", "Land Mine Damage", "Land Mines Spawned",
+        "Rend Armor Damage", "Death Ray Damage", "Smart Missile Damage"
     ],
     "Utility": [
-        "Interest Earned",
-        "Gem Blocks Tapped",
-        "Cells Earned",
-        "Cells Earned Rate",
-        "Reroll Shards Earned",
-        "Reroll Shards Earned Rate",
-        "Rare Modules",
-        "Inner Land Mine Damage",
-        "Chain Lightning Damage",
-        "Death Wave Damage",
-        "Swamp Damage",
-        "Black Hole Damage",
-        "Orb Hits",
-        "Waves Skipped",
-        "Recovery Packages"
+        "Interest Earned", "Gem Blocks Tapped", "Cells Earned", "Cells Earned Rate",
+        "Reroll Shards Earned", "Reroll Shards Earned Rate", "Rare Modules", "Inner Land Mine Damage",
+        "Chain Lightning Damage", "Death Wave Damage", "Swamp Damage", "Black Hole Damage",
+        "Orb Hits", "Waves Skipped", "Recovery Packages"
     ],
     "Enemies Destroyed": [
         "Destroyed by Orbs", "Destroyed by Thorns", "Destroyed by Death ray", "Destroyed by Land Mine",
@@ -207,56 +122,34 @@ const CATEGORY_FIELDS = {
         "Flame bot damage", "Thunder bot stuns", "Golden bot coins earned", "Coins Stolen"
     ],
     "Guardian": [
-        "ID",
-        "Entry Date",
-        "Damage",
-        "Bounty Coins",
-        "Guardian catches",
-        "Coins Fetched",
-        "Gems",
-        "Medals",
-        "Reroll Shards",
-        "Reroll Shards Earned Rate",
-        "Cannon Shards",
-        "Armor Shards",
-        "Generator Shards",
-        "Core Shards",
-        "Common Modules",
-        "Rare Modules"
+        "ID", "Entry Date", "Damage", "Bounty Coins", "Guardian catches", "Coins Fetched", "Gems",
+        "Medals", "Reroll Shards", "Reroll Shards Earned Rate", "Cannon Shards", "Armor Shards",
+        "Generator Shards", "Core Shards", "Common Modules", "Rare Modules"
     ]
 };
 
-// Utility to get keys for a category, always include ID and Entry Date
-function getCategoryKeys(category, entries) {
-    // Always include all columns defined for the category
+function getCategoryKeys(category) {
     const categoryFields = CATEGORY_FIELDS[category];
-    // Always include ID and Entry Date at the start
     return ['ID', 'Entry Date', ...categoryFields.filter(k => k !== 'ID' && k !== 'Entry Date')];
 }
 
-// Store table visibility in localStorage
+// Table/column visibility
 function getVisibleTables() {
     const stored = localStorage.getItem('towerTrackerVisibleTables');
     if (stored) return JSON.parse(stored);
-    // Default: all tables visible
     return Object.keys(CATEGORY_FIELDS).reduce((obj, cat) => { obj[cat] = true; return obj; }, {});
 }
-
 function setVisibleTables(obj) {
     localStorage.setItem('towerTrackerVisibleTables', JSON.stringify(obj));
 }
-
-// Store visible columns per table in localStorage
 function getVisibleColumns(table) {
     const stored = localStorage.getItem('towerTrackerVisibleColumns');
     if (stored) {
         const obj = JSON.parse(stored);
-        return obj[table] || getCategoryKeys(table, []);
+        return obj[table] || getCategoryKeys(table);
     }
-    // Default: all columns visible
-    return getCategoryKeys(table, []);
+    return getCategoryKeys(table);
 }
-
 function setVisibleColumns(table, columns) {
     let obj = {};
     const stored = localStorage.getItem('towerTrackerVisibleColumns');
@@ -265,7 +158,7 @@ function setVisibleColumns(table, columns) {
     localStorage.setItem('towerTrackerVisibleColumns', JSON.stringify(obj));
 }
 
-// Settings UI (with overlay for click outside)
+// Settings panel
 function showSettings() {
     const tables = Object.keys(CATEGORY_FIELDS);
     const visibleTables = getVisibleTables();
@@ -275,13 +168,6 @@ function showSettings() {
     if (!overlay) {
         overlay = document.createElement('div');
         overlay.id = 'settingsOverlay';
-        overlay.style.position = 'fixed';
-        overlay.style.top = '0';
-        overlay.style.left = '0';
-        overlay.style.width = '100vw';
-        overlay.style.height = '100vh';
-        overlay.style.zIndex = '2999';
-        overlay.style.background = 'rgba(0,0,0,0.2)';
         document.body.appendChild(overlay);
     }
     overlay.style.display = 'block';
@@ -289,47 +175,39 @@ function showSettings() {
     if (!settingsDiv) {
         settingsDiv = document.createElement('div');
         settingsDiv.id = 'settingsPanel';
-        settingsDiv.style.position = 'fixed';
-        settingsDiv.style.top = '50%';
-        settingsDiv.style.left = '50%';
-        settingsDiv.style.transform = 'translate(-50%, -50%)';
-        settingsDiv.style.background = '#23262f';
-        settingsDiv.style.color = '#e4e6eb';
-        settingsDiv.style.padding = '1rem';
-        settingsDiv.style.borderRadius = '12px';
-        settingsDiv.style.boxShadow = '0 2px 12px rgba(0,0,0,0.25)';
-        settingsDiv.style.zIndex = '3000';
-        settingsDiv.style.maxWidth = '90vw';
-        settingsDiv.style.maxHeight = '80vh';
-        settingsDiv.style.overflowY = 'auto';
         document.body.appendChild(settingsDiv);
     }
 
-    let html = `<strong>Show/Hide Tables & Columns</strong><br><br>`;
-    tables.forEach(table => {
-        const columns = getCategoryKeys(table, []);
-        const visibleCols = getVisibleColumns(table);
-        html += `<div style="margin-bottom:1rem;">
-            <label>
-                <input type="checkbox" class="table-toggle" data-table="${table}" ${visibleTables[table] ? 'checked' : ''}>
-                <strong>${table}</strong>
-            </label>
-            <div style="margin-left:1.5rem;">
-                ${columns.map(col => `
-                    <label style="margin-right:1rem;">
-                        <input type="checkbox" class="col-toggle" data-table="${table}" value="${col}" ${visibleCols.includes(col) ? 'checked' : ''}>
-                        ${col}
+    let html = `
+        <div class="settings-content">
+            <strong>Show/Hide Tables & Columns</strong>
+            ${tables.map(table => {
+                const columns = getCategoryKeys(table);
+                const visibleCols = getVisibleColumns(table);
+                return `
+                <div class="settings-table-group">
+                    <label class="settings-table-title">
+                        <input type="checkbox" class="table-toggle" data-table="${table}" ${visibleTables[table] ? 'checked' : ''}>
+                        ${table}
                     </label>
-                `).join('')}
-            </div>
-        </div>`;
-    });
-    html += `<div style="display:flex;justify-content:flex-end;gap:1rem;">
-        <button id="settingsApplyBtn" style="background:#4f8cff;color:#fff;border:none;padding:0.5rem 1rem;border-radius:6px;cursor:pointer;">Apply</button>
-        <button id="settingsCancelBtn" style="background:#31343e;color:#fff;border:none;padding:0.5rem 1rem;border-radius:6px;cursor:pointer;">Cancel</button>
-    </div>`;
+                    <div class="settings-columns-list">
+                        ${columns.map(col => `
+                            <label>
+                                <input type="checkbox" class="col-toggle" data-table="${table}" value="${col}" ${visibleCols.includes(col) ? 'checked' : ''}>
+                                ${col}
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>`;
+            }).join('')}
+        </div>
+        <div class="settings-actions">
+            <button id="settingsApplyBtn" style="background:#4f8cff;color:#fff;border:none;padding:0.5rem 1.2rem;border-radius:6px;cursor:pointer;">Apply</button>
+            <button id="settingsCancelBtn" style="background:#31343e;color:#fff;border:none;padding:0.5rem 1.2rem;border-radius:6px;cursor:pointer;">Cancel</button>
+        </div>
+    `;
     settingsDiv.innerHTML = html;
-    settingsDiv.style.display = 'block';
+    settingsDiv.style.display = 'flex';
 
     document.getElementById('settingsCancelBtn').onclick = () => {
         settingsDiv.style.display = 'none';
@@ -358,14 +236,13 @@ function showSettings() {
         overlay.style.display = 'none';
     };
 
-    // Close settings when clicking outside the panel
-    overlay.onclick = function (e) {
+    overlay.onclick = function () {
         settingsDiv.style.display = 'none';
         overlay.style.display = 'none';
     };
 }
 
-// Update showCategoryTable to use visible columns and table visibility
+// Table rendering
 function showCategoryTable(category, entries, sortKey = null, asc = true) {
     const visibleTables = getVisibleTables();
     if (!visibleTables[category]) return '';
@@ -386,8 +263,7 @@ function showCategoryTable(category, entries, sortKey = null, asc = true) {
         });
     }
 
-    // Table HTML
-    let html = `<section class="category-table">
+    return `<section class="category-table">
         <h2>${category}</h2>
         <table>
             <thead>
@@ -406,10 +282,8 @@ function showCategoryTable(category, entries, sortKey = null, asc = true) {
             </tbody>
         </table>
     </section>`;
-    return html;
 }
 
-// Update showAllCategoryTables to use new showCategoryTable
 function showAllCategoryTables() {
     const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
     const container = document.getElementById('entriesTablesContainer');
@@ -425,92 +299,6 @@ function showAllCategoryTables() {
 }
 
 let currentSort = { key: null, asc: true };
-
-function showEntries(selectedKeys = null, sortKey = null, asc = true) {
-    const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
-    let tableDiv = document.getElementById('entriesTable');
-    if (!tableDiv) {
-        tableDiv = document.createElement('div');
-        tableDiv.id = 'entriesTable';
-        tableDiv.style.margin = '2rem auto';
-        tableDiv.style.maxWidth = '400px';
-        tableDiv.style.overflowX = 'auto';
-        document.querySelector('main').appendChild(tableDiv);
-    }
-    if (entries.length === 0) {
-        tableDiv.innerHTML = "<strong>No entries yet.</strong>";
-        return;
-    }
-    const allKeys = getAllKeys(entries);
-    if (!selectedKeys) {
-        const saved = JSON.parse(localStorage.getItem('towerTrackerSelectedColumns') || 'null');
-        selectedKeys = saved || allKeys;
-    }
-    selectedKeys = ['ID', 'Entry Date', ...selectedKeys.filter(k => k !== 'ID' && k !== 'Entry Date')];
-
-    let sortedEntries = [...entries];
-    if (sortKey) {
-        sortedEntries.sort((a, b) => {
-            let va = a[sortKey] || '';
-            let vb = b[sortKey] || '';
-            let na = parseFloat(va.replace(/[^\d\.\-]/g, ''));
-            let nb = parseFloat(vb.replace(/[^\d\.\-]/g, ''));
-            if (!isNaN(na) && !isNaN(nb)) return asc ? na - nb : nb - na;
-            if (va < vb) return asc ? -1 : 1;
-            if (va > vb) return asc ? 1 : -1;
-            return 0;
-        });
-    }
-
-    const averages = calculateAverages(entries);
-
-    let html = `<table style="width:100%;background:#23262f;color:#e4e6eb;border-radius:8px;border-collapse:collapse;">
-        <thead>
-            <tr>
-                <th style="width:32px; padding:2px 0; border-bottom:1px solid #31343e;"></th>
-                ${selectedKeys.map(k => {
-                    let arrow = currentSort.key === k ? (currentSort.asc ? ' ▲' : ' ▼') : '';
-                    let label = k === '_averages' ? 'Averages' : k;
-                    return `<th style="padding:4px; border-bottom:1px solid #31343e; cursor:pointer;" onclick="orderByColumn('${k}')">${label}${arrow}</th>`;
-                }).join('')}
-            </tr>
-        </thead>
-        <tbody>
-        ${sortedEntries.map((entry, idx) => `<tr>
-            <td style="width:32px; padding:2px 0; border-bottom:1px solid #31343e; text-align:center;">
-                <button onclick="deleteEntry(${idx})" title="Delete" class="delete-btn">&#10060;</button>
-            </td>
-            ${selectedKeys.map(k => {
-                if (k === '_averages') {
-                    return `<td style="padding:4px;border-bottom:1px solid #31343e;">
-                        Wave: ${averages.avgWave}<br>
-                        Coins: ${averages.avgCoins}<br>
-                        Cash: ${averages.avgCash}<br>
-                        Damage: ${averages.avgDamage}<br>
-                        Cells: ${averages.avgCells}<br>
-                        Medals: ${averages.avgMedals}
-                    </td>`;
-                }
-                return `<td style="padding:4px;border-bottom:1px solid #31343e;">${entry[k] || ''}</td>`;
-            }).join('')}
-        </tr>`).join('')}
-        </tbody>
-    </table>`;
-    tableDiv.innerHTML = html;
-}
-
-window.orderByColumn = function(key) {
-    if (currentSort.key === key) {
-        currentSort.asc = !currentSort.asc;
-    } else {
-        currentSort.key = key;
-        currentSort.asc = true;
-    }
-    const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
-    const allKeys = getAllKeys(entries);
-    let selectedKeys = JSON.parse(localStorage.getItem('towerTrackerSelectedColumns') || 'null') || allKeys;
-    showEntries(selectedKeys, currentSort.key, currentSort.asc);
-};
 
 window.orderByCategoryColumn = function(category, key) {
     // Save sort state per category if needed
@@ -548,16 +336,11 @@ document.getElementById('pasteClipboardBtn').addEventListener('click', async () 
     }
 });
 
-// On page load, show all tables
-window.addEventListener('DOMContentLoaded', () => {
-    showAllCategoryTables();
-});
-
 document.getElementById('helpBtn').onclick = function() {
     alert(
         "TowerTracker Help:\n\n" +
         "- Click 'Paste & Parse Clipboard' to import and save your game stats from the clipboard.\n" +
-        "- Use the gear button to select which columns to display.\n" +
+        "- Use the gear button to show/hide tables and columns.\n" +
         "- Click the red X to delete an entry.\n" +
         "- Click column headers to sort.\n" +
         "- Your data is saved locally in your browser."

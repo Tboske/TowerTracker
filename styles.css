@@ -242,6 +242,101 @@ footer {
     padding: 2px 0;
 }
 
+/* Settings panel overlay */
+#settingsOverlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 2999;
+    background: rgba(0,0,0,0.2);
+}
+
+/* Settings panel layout */
+#settingsPanel {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--card-bg);
+    color: var(--text-main);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    z-index: 3000;
+    max-width: 600px;
+    max-height: 80vh;
+    width: 100%;
+    font-size: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+}
+
+#settingsPanel .settings-content {
+    padding: 2rem 2.5rem 1rem 2.5rem;
+    overflow-y: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+#settingsPanel .settings-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1rem 2.5rem;
+    background: var(--card-bg, #23262f);
+    border-top: 1px solid #31343e;
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    z-index: 2;
+    flex-shrink: 0;
+}
+
+.settings-table-group {
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #31343e;
+    padding-bottom: 1rem;
+}
+
+.settings-table-title {
+    font-size: 1.15rem;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.settings-columns-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    margin-left: 1.5rem;
+    margin-top: 0.5rem;
+}
+
+.settings-columns-list label {
+    font-size: 1rem;
+    color: var(--text-main);
+    background: #23262f;
+    border-radius: 6px;
+    padding: 2px 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.settings-columns-list input[type="checkbox"] {
+    margin-right: 6px;
+}
+
+#settingsPanel strong {
+    font-size: 1.3rem;
+    color: var(--accent);
+    margin-bottom: 1rem;
+    display: block;
+}
+
 @media (max-width: 600px) {
     main {
         padding: 1rem 0.5rem;
