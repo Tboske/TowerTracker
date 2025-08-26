@@ -105,6 +105,12 @@ button:active, input[type="submit"]:active {
     padding: 0.5rem;
     max-width: 100vw;
     overflow-x: auto;
+    position: relative;
+}
+
+/* Remove the left mask/fade effect for sticky first column */
+.category-table::before {
+    display: none;
 }
 
 .category-table h2 {

@@ -280,30 +280,20 @@ function showCategoryTable(category, entries) {
 }
 
 function showCombinedTable(entries) {
-    const visibleTables = getVisibleTables();
-    const categories = Object.keys(CATEGORY_FIELDS).filter(cat => visibleTables[cat]);
-    if (!categories.length || !entries.length) return '';
+    // Sort entries by most recent (highest ID) first
+    const sortedEntries = [...entries].sort((a, b) => (b.ID || 0) - (a.ID || 0));
+    if (!sortedEntries.length) return '';
 
     // Gather all visible keys per category, skipping ID and Entry Date for categories
-    let rows = [];
-    // First, collect all keys except ID and Entry Date for each category
+    const visibleTables = getVisibleTables();
+    const categories = Object.keys(CATEGORY_FIELDS).filter(cat => visibleTables[cat]);
+    let allKeys = [];
+    let sectionRows = [];
     categories.forEach(category => {
         const keys = getVisibleColumns(category).filter(k => k !== 'ID' && k !== 'Entry Date');
         if (!keys.length) return;
-        // Section header row
-        rows.push({
-            isSection: true,
-            label: category,
-            colspan: entries.length + 1
-        });
-        // Data rows
-        keys.forEach(key => {
-            rows.push({
-                isSection: false,
-                label: key,
-                values: entries.map(entry => entry[key] || '')
-            });
-        });
+        sectionRows.push({ label: category, index: allKeys.length });
+        allKeys = allKeys.concat(keys);
     });
 
     // Table HTML
@@ -313,24 +303,33 @@ function showCombinedTable(entries) {
         <table>
             <thead>
                 <tr>
-                    <th style="min-width:120px;position:sticky;top:0;z-index:2;background:var(--card-bg);">Field</th>
-                    ${entries.map((entry, idx) =>
+                    <th style="min-width:160px;position:sticky;left:0;top:0;z-index:3;background:var(--card-bg);">Field</th>
+                    ${sortedEntries.map((entry, idx) =>
                         `<th style="min-width:80px;position:sticky;top:0;z-index:2;background:var(--card-bg);">
-                            #${entry.ID || idx + 1}<br>
-                            <span style="font-size:0.9em;color:var(--text-muted);">${entry['Entry Date'] || ''}</span>
-                            <button onclick="deleteEntry(${idx})" title="Delete" class="delete-btn">&#10060;</button>
+                            <div><strong>ID:</strong> ${entry.ID || idx + 1}</div>
+                            <div style="font-size:0.9em;color:var(--text-muted);"><strong>Date:</strong> ${entry['Entry Date'] || ''}</div>
+                            <button onclick="deleteEntry(${entries.indexOf(entry)})" title="Delete" class="delete-btn">&#10060;</button>
                         </th>`
                     ).join('')}
                 </tr>
             </thead>
             <tbody>
-                ${rows.map(row => row.isSection
-                    ? `<tr><td colspan="${row.colspan}" style="background:var(--accent);color:#fff;font-weight:bold;text-align:left;position:sticky;left:0;z-index:1;">${row.label}</td></tr>`
-                    : `<tr>
-                        <td style="position:sticky;left:0;z-index:1;background:var(--card-bg);"><strong>${row.label}</strong></td>
-                        ${row.values.map(val => `<td>${val}</td>`).join('')}
-                    </tr>`
-                ).join('')}
+                ${allKeys.map((key, i) => {
+                    // Insert section row if needed
+                    const section = sectionRows.find(s => s.index === i);
+                    let sectionHtml = '';
+                    if (section) {
+                        sectionHtml = `<tr class="section-row">
+                            <td colspan="${sortedEntries.length + 1}" style="background:var(--accent);color:#fff;font-weight:bold;text-align:left;position:sticky;left:0;top:0;z-index:20;">
+                                ${section.label}
+                            </td>
+                        </tr>`;
+                    }
+                    return sectionHtml + `<tr>
+                        <td style="position:sticky;left:0;z-index:1;background:var(--card-bg);"><strong>${key}</strong></td>
+                        ${sortedEntries.map(entry => `<td>${entry[key] || ''}</td>`).join('')}
+                    </tr>`;
+                }).join('')}
             </tbody>
         </table>
         </div>
