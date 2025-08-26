@@ -336,6 +336,19 @@ document.getElementById('pasteClipboardBtn').addEventListener('click', async () 
     }
 });
 
+document.getElementById('manualParseBtn').onclick = function() {
+    const text = document.getElementById('manualInput').value;
+    if (text.trim().length > 0) {
+        const entry = parseGameData(text);
+        saveEntry(entry);
+        showAllCategoryTables();
+        alert('Parsed successfully!');
+        document.getElementById('manualInput').value = '';
+    } else {
+        alert('Parse failed!');
+    }
+};
+
 document.getElementById('helpBtn').onclick = function() {
     alert(
         "TowerTracker Help:\n\n" +
