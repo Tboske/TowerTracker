@@ -140,13 +140,21 @@ document.getElementById('pasteClipboardBtn').addEventListener('click', async () 
     try {
         const text = await navigator.clipboard.readText();
         if (text.trim().length > 0) {
-            // Use the parsing function from parsing.js
             const entry = parseGameData(text);
-            saveEntry(entry);
-            showAllCategoryTables();
-            alert('Parsed successfully!');
+
+            // Require all of these keys for valid input
+            const requiredKeys = ["Tier", "Wave", "Game Time", "Coins Earned", "Cells Earned"];
+            const hasAllRequired = requiredKeys.every(k => Object.keys(entry).includes(k));
+
+            if (hasAllRequired) {
+                saveEntry(entry);
+                showAllCategoryTables();
+                alert('Parsed successfully!');
+            } else {
+                alert('Parse failed! Missing required game data (Tier, Wave, Game Time, Coins Earned, Cells Earned).');
+            }
         } else {
-            alert('Parse failed!');
+            alert('Parse failed! Clipboard was empty.');
         }
     } catch (err) {
         alert('Failed to read clipboard!');
