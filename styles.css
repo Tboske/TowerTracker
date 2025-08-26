@@ -289,3 +289,53 @@ footer {
         padding: 0.5rem;
     }
 }
+
+/* Make table horizontally scrollable */
+.table-scroll-x {
+    overflow-x: auto;
+}
+
+/* Sticky first column */
+.sticky-col {
+    min-width: 160px;
+    max-width: 220px;
+    width: 180px;
+    position: sticky;
+    left: 0;
+    top: 0;
+    z-index: 3;
+    background: var(--card-bg);
+    white-space: pre-line;
+    font-weight: bold;
+    text-align: left;
+}
+
+/* Sticky header cells */
+.sticky-header {
+    min-width: 80px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--card-bg);
+}
+
+/* Section header row style */
+.section-row td {
+    background: var(--accent);
+    color: #fff;
+    font-weight: bold;
+    text-align: left;
+    position: sticky;
+    left: 0;
+    top: 0;
+    z-index: 20;
+}
+
+/* Entry ID and date formatting */
+.entry-id {
+    font-weight: bold;
+}
+.entry-date {
+    font-size: 0.9em;
+    color: var(--text-muted);
+}

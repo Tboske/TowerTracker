@@ -71,13 +71,13 @@ function showCombinedTable(entries) {
 
     // Table HTML (no "All Data" and no "Field" header)
     let html = `<section class="category-table">
-        <div style="overflow-x:auto;">
+        <div class="table-scroll-x">
         <table>
             <thead>
                 <tr>
                     <th class="sticky-col"></th>
                     ${sortedEntries.map((entry, idx) =>
-                        `<th style="min-width:80px;position:sticky;top:0;z-index:2;background:var(--card-bg);">
+                        `<th class="sticky-header">
                             <div class="entry-id">ID: ${entry.ID || idx + 1}</div>
                             <div class="entry-date">Date: ${entry['Entry Date'] || ''}</div>
                             <button onclick="deleteEntry(${entries.indexOf(entry)})" title="Delete" class="delete-btn">&#10060;</button>
