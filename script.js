@@ -244,45 +244,98 @@ function showSettings() {
 }
 
 // Table rendering
-function showCategoryTable(category, entries, sortKey = null, asc = true) {
+function showCategoryTable(category, entries) {
     const visibleTables = getVisibleTables();
     if (!visibleTables[category]) return '';
     const keys = getVisibleColumns(category);
     if (keys.length === 0) return '';
 
-    let sortedEntries = [...entries];
-    if (sortKey && keys.includes(sortKey)) {
-        sortedEntries.sort((a, b) => {
-            let va = a[sortKey] || '';
-            let vb = b[sortKey] || '';
-            let na = parseFloat(va.replace(/[^\d\.\-]/g, ''));
-            let nb = parseFloat(vb.replace(/[^\d\.\-]/g, ''));
-            if (!isNaN(na) && !isNaN(nb)) return asc ? na - nb : nb - na;
-            if (va < vb) return asc ? -1 : 1;
-            if (va > vb) return asc ? 1 : -1;
-            return 0;
-        });
-    }
-
-    return `<section class="category-table">
+    // Invert table: headers as first column, values as subsequent columns
+    let html = `<section class="category-table">
         <h2>${category}</h2>
+        <div style="overflow-x:auto;">
         <table>
             <thead>
                 <tr>
-                    <th class="delete-col"></th>
-                    ${keys.map(k => `<th onclick="orderByCategoryColumn('${category}','${k}')" style="cursor:pointer;">${k}</th>`).join('')}
+                    <th style="min-width:120px;">Field</th>
+                    ${entries.map((entry, idx) =>
+                        `<th style="min-width:80px;">#${entry.ID || idx + 1}
+                            <button onclick="deleteEntry(${idx})" title="Delete" class="delete-btn">&#10060;</button>
+                        </th>`
+                    ).join('')}
                 </tr>
             </thead>
             <tbody>
-                ${sortedEntries.map((entry, idx) => `<tr>
-                    <td class="delete-col">
-                        <button onclick="deleteEntry(${idx})" title="Delete" class="delete-btn">&#10060;</button>
-                    </td>
-                    ${keys.map(k => `<td>${entry[k] || ''}</td>`).join('')}
-                </tr>`).join('')}
+                ${keys.map(key => `
+                    <tr>
+                        <td><strong>${key}</strong></td>
+                        ${entries.map(entry => `<td>${entry[key] || ''}</td>`).join('')}
+                    </tr>
+                `).join('')}
             </tbody>
         </table>
+        </div>
     </section>`;
+    return html;
+}
+
+function showCombinedTable(entries) {
+    const visibleTables = getVisibleTables();
+    const categories = Object.keys(CATEGORY_FIELDS).filter(cat => visibleTables[cat]);
+    if (!categories.length || !entries.length) return '';
+
+    // Gather all visible keys per category, skipping ID and Entry Date for categories
+    let rows = [];
+    // First, collect all keys except ID and Entry Date for each category
+    categories.forEach(category => {
+        const keys = getVisibleColumns(category).filter(k => k !== 'ID' && k !== 'Entry Date');
+        if (!keys.length) return;
+        // Section header row
+        rows.push({
+            isSection: true,
+            label: category,
+            colspan: entries.length + 1
+        });
+        // Data rows
+        keys.forEach(key => {
+            rows.push({
+                isSection: false,
+                label: key,
+                values: entries.map(entry => entry[key] || '')
+            });
+        });
+    });
+
+    // Table HTML
+    let html = `<section class="category-table">
+        <h2>All Data</h2>
+        <div style="overflow-x:auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th style="min-width:120px;position:sticky;top:0;z-index:2;background:var(--card-bg);">Field</th>
+                    ${entries.map((entry, idx) =>
+                        `<th style="min-width:80px;position:sticky;top:0;z-index:2;background:var(--card-bg);">
+                            #${entry.ID || idx + 1}<br>
+                            <span style="font-size:0.9em;color:var(--text-muted);">${entry['Entry Date'] || ''}</span>
+                            <button onclick="deleteEntry(${idx})" title="Delete" class="delete-btn">&#10060;</button>
+                        </th>`
+                    ).join('')}
+                </tr>
+            </thead>
+            <tbody>
+                ${rows.map(row => row.isSection
+                    ? `<tr><td colspan="${row.colspan}" style="background:var(--accent);color:#fff;font-weight:bold;text-align:left;position:sticky;left:0;z-index:1;">${row.label}</td></tr>`
+                    : `<tr>
+                        <td style="position:sticky;left:0;z-index:1;background:var(--card-bg);"><strong>${row.label}</strong></td>
+                        ${row.values.map(val => `<td>${val}</td>`).join('')}
+                    </tr>`
+                ).join('')}
+            </tbody>
+        </table>
+        </div>
+    </section>`;
+    return html;
 }
 
 function showAllCategoryTables() {
@@ -294,9 +347,7 @@ function showAllCategoryTables() {
         document.querySelector('main').appendChild(div);
     }
     const target = document.getElementById('entriesTablesContainer');
-    target.innerHTML = Object.keys(CATEGORY_FIELDS)
-        .map(cat => showCategoryTable(cat, entries))
-        .join('');
+    target.innerHTML = showCombinedTable(entries);
 }
 
 let currentSort = { key: null, asc: true };
