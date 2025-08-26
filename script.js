@@ -78,8 +78,8 @@ function showCombinedTable(entries) {
                     <th class="sticky-col"></th>
                     ${sortedEntries.map((entry, idx) =>
                         `<th class="sticky-header">
-                            <div class="entry-id">ID: ${entry.ID || idx + 1}</div>
-                            <div class="entry-date">Date: ${entry['Entry Date'] || ''}</div>
+                            <div class="entry-id">#${entry.ID || idx + 1}</div>
+                            <div class="entry-date">${entry['Entry Date'] || ''}</div>
                             <button onclick="deleteEntry(${entries.indexOf(entry)})" title="Delete" class="delete-btn">&#10060;</button>
                         </th>`
                     ).join('')}
