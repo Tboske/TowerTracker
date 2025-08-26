@@ -337,6 +337,13 @@ footer {
     display: block;
 }
 
+#pasteClipboardBtn:disabled {
+    background: #444 !important;
+    color: #aaa !important;
+    cursor: not-allowed !important;
+    opacity: 0.6;
+}
+
 @media (max-width: 600px) {
     main {
         padding: 1rem 0.5rem;

@@ -359,3 +359,5 @@ document.getElementById('helpBtn').onclick = function() {
         "- Your data is saved locally in your browser."
     );
 };
+
+document.getElementById('pasteClipboardBtn').disabled = true;
