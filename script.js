@@ -12,7 +12,7 @@ const CATEGORY_FIELDS = {
         "Coins Stolen", "Coins Fetched"
     ],
     "Combat": [
-        "Damage Dealt Rate", "Damage Taken", "Damage Taken Wall", "Damage Taken While Berserked",
+        "Damage Taken", "Damage Taken Wall", "Damage Taken While Berserked",
         "Damage Gain From Berserk", "Death Defy", "Lifesteal", "Damage Dealt", "Projectiles Damage",
         "Projectiles Count", "Thorn Damage", "Orb Damage", "Land Mine Damage", "Land Mines Spawned",
         "Rend Armor Damage", "Death Ray Damage", "Smart Missile Damage"
@@ -32,7 +32,7 @@ const CATEGORY_FIELDS = {
         "Flame bot damage", "Thunder bot stuns", "Golden bot coins earned", "Coins Stolen"
     ],
     "Guardian": [
-        "ID", "Entry Date", "Damage", "Bounty Coins", "Guardian catches", "Coins Fetched", "Gems",
+        "ID", "Entry Date", "Damage", "Guardian catches", "Coins Fetched", "Gems",
         "Medals", "Reroll Shards", "Reroll Shards/hour", "Cannon Shards", "Armor Shards",
         "Generator Shards", "Core Shards", "Common Modules", "Rare Modules"
     ]
