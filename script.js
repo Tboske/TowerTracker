@@ -4,15 +4,22 @@ function parseGameData(data) {
     const lines = data.split(/\r?\n/).map(line => line.trim()).filter(line => line.length > 0);
 
     lines.forEach(line => {
-        // Split on first occurrence of two or more spaces, tab, or colon
-        let match = line.match(/^(.+?)(?:\s{2,}|\t|:)\s*(.+)$/);
-        if (!match) {
-            // If not matched, try splitting on first single space
-            match = line.match(/^(.+?)\s+(.+)$/);
-        }
+        // Try splitting on tab first
+        let match = line.match(/^(.+?)\t(.+)$/);
+        // If not matched, try splitting on two or more spaces
+        if (!match) match = line.match(/^(.+?)\s{2,}(.+)$/);
+        // If not matched, try splitting on single colon
+        if (!match) match = line.match(/^(.+?):\s*(.+)$/);
+        // If not matched, try splitting on single space (last resort)
+        if (!match) match = line.match(/^(.+?)\s+(.+)$/);
         if (match) {
-            const key = match[1].trim();
-            const value = match[2].trim();
+            let key = match[1].trim();
+            let value = match[2].trim();
+            // Unify all rate keys to /hour
+            if (key === "Coins Earned Rate" || key === "Coins/hour") key = "Coins/hour";
+            if (key === "Cash Earning Rate" || key === "Cash/hour") key = "Cash/hour";
+            if (key === "Cells Earned Rate" || key === "Cells/hour") key = "Cells/hour";
+            if (key === "Reroll Shards Earned Rate" || key === "Reroll Shards/hour") key = "Reroll Shards/hour";
             entry[key] = value;
         }
     });
@@ -37,7 +44,7 @@ function parseGameData(data) {
         totalHours = hours + (minutes / 60) + (seconds / 3600);
     }
 
-    // Coins Earned Rate
+    // Coins/hour
     if (entry['Coins Earned'] && totalHours > 0) {
         let coinsStr = entry['Coins Earned'];
         let coins = parseFloat(coinsStr.replace(/[^\d\.]/g, ''));
@@ -45,70 +52,63 @@ function parseGameData(data) {
         else if (coinsStr.includes('M')) coins *= 1e6;
         else if (coinsStr.includes('K')) coins *= 1e3;
         let coinsPerHour = coins / totalHours;
-        if (coinsPerHour >= 1e9) entry['Coins Earned Rate'] = (coinsPerHour / 1e9).toFixed(2) + 'B/h';
-        else if (coinsPerHour >= 1e6) entry['Coins Earned Rate'] = (coinsPerHour / 1e6).toFixed(2) + 'M/h';
-        else if (coinsPerHour >= 1e3) entry['Coins Earned Rate'] = (coinsPerHour / 1e3).toFixed(2) + 'K/h';
-        else entry['Coins Earned Rate'] = coinsPerHour.toFixed(2) + '/h';
+        if (coinsPerHour >= 1e9) entry['Coins/hour'] = (coinsPerHour / 1e9).toFixed(2) + 'B/h';
+        else if (coinsPerHour >= 1e6) entry['Coins/hour'] = (coinsPerHour / 1e6).toFixed(2) + 'M/h';
+        else if (coinsPerHour >= 1e3) entry['Coins/hour'] = (coinsPerHour / 1e3).toFixed(2) + 'K/h';
+        else entry['Coins/hour'] = coinsPerHour.toFixed(2) + '/h';
     } else {
-        entry['Coins Earned Rate'] = 'N/A';
+        entry['Coins/hour'] = 'N/A';
     }
 
-    // Cells Earned Rate
+    // Cash/hour
+    if (entry['Cash Earned'] && totalHours > 0) {
+        let cashStr = entry['Cash Earned'].replace(/[^0-9\.\-]/g, '');
+        let cash = parseFloat(cashStr);
+        if (entry['Cash Earned'].includes('B')) cash *= 1e9;
+        else if (entry['Cash Earned'].includes('M')) cash *= 1e6;
+        else if (entry['Cash Earned'].includes('K')) cash *= 1e3;
+        let cashPerHour = cash / totalHours;
+        if (cashPerHour >= 1e9) entry['Cash/hour'] = (cashPerHour / 1e9).toFixed(2) + 'B/h';
+        else if (cashPerHour >= 1e6) entry['Cash/hour'] = (cashPerHour / 1e6).toFixed(2) + 'M/h';
+        else if (cashPerHour >= 1e3) entry['Cash/hour'] = (cashPerHour / 1e3).toFixed(2) + 'K/h';
+        else entry['Cash/hour'] = cashPerHour.toFixed(2) + '/h';
+    } else {
+        entry['Cash/hour'] = 'N/A';
+    }
+
+    // Cells/hour
     if (entry['Cells Earned'] && totalHours > 0) {
         let cells = parseFloat(entry['Cells Earned'].replace(/[^\d\.]/g, ''));
         let cellsPerHour = cells / totalHours;
-        entry['Cells Earned Rate'] = cellsPerHour.toFixed(2) + '/h';
+        entry['Cells/hour'] = cellsPerHour.toFixed(2) + '/h';
     } else {
-        entry['Cells Earned Rate'] = 'N/A';
+        entry['Cells/hour'] = 'N/A';
     }
 
-    // Reroll Shards Earned Rate
+    // Reroll Shards/hour
     if (entry['Reroll Shards Earned'] && totalHours > 0) {
         let shardsStr = entry['Reroll Shards Earned'];
         let shards = parseFloat(shardsStr.replace(/[^\d\.]/g, ''));
         if (shardsStr.includes('K')) shards *= 1e3;
         let shardsPerHour = shards / totalHours;
-        if (shardsPerHour >= 1e3) entry['Reroll Shards Earned Rate'] = (shardsPerHour / 1e3).toFixed(2) + 'K/h';
-        else entry['Reroll Shards Earned Rate'] = shardsPerHour.toFixed(2) + '/h';
+        if (shardsPerHour >= 1e3) entry['Reroll Shards/hour'] = (shardsPerHour / 1e3).toFixed(2) + 'K/h';
+        else entry['Reroll Shards/hour'] = shardsPerHour.toFixed(2) + '/h';
     } else {
-        entry['Reroll Shards Earned Rate'] = 'N/A';
+        entry['Reroll Shards/hour'] = 'N/A';
     }
 
     return entry;
 }
 
-function saveEntry(entry) {
-    const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
-    if (!entry.ID) {
-        entry.ID = parseInt(localStorage.getItem('towerTrackerLastNumber') || '0', 10) + 1;
-        localStorage.setItem('towerTrackerLastNumber', entry.ID);
-    }
-    if (!entry['Entry Date']) {
-        const now = new Date();
-        entry['Entry Date'] = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
-    }
-    entries.push(entry);
-    localStorage.setItem('towerTrackerEntries', JSON.stringify(entries));
-}
-
-function getAllKeys(entries) {
-    const keysSet = entries.reduce((set, entry) => {
-        Object.keys(entry).forEach(k => set.add(k));
-        return set;
-    }, new Set());
-    const keys = Array.from(keysSet).filter(k => k !== 'ID' && k !== 'Entry Date' && k !== '_averages');
-    return ['ID', 'Entry Date', ...keys, '_averages'];
-}
-
-// Define fields for each category
+// Update CATEGORY_FIELDS to only use /hour keys for rates
 const CATEGORY_FIELDS = {
     "Battle Report": [
-        "ID", "Entry Date", "Game Time", "Real Time", "Wave", "Coins Earned", "Coins Earned Rate",
-        "Cash Earned", "Cash Earning Rate", "Interest Earned", "Gem Blocks Tapped",
-        "Cells Earned", "Cells Earned Rate", "Reroll Shards Earned", "Reroll Shards Earned Rate"
+        "ID", "Entry Date", "Game Time", "Real Time", "Wave", "Coins Earned", "Coins/hour",
+        "Cash Earned", "Cash/hour", "Interest Earned", "Gem Blocks Tapped",
+        "Cells Earned", "Cells/hour", "Reroll Shards Earned", "Reroll Shards/hour"
     ],
     "Coins": [
-        "ID", "Entry Date", "Coins Earned", "Coins Earned Rate", "Coins from Death Wave",
+        "ID", "Entry Date", "Coins Earned", "Coins/hour", "Coins from Death Wave",
         "Coins from Golden Tower", "Coins from Blackhole", "Coins from Spotlight", "Coins from Orbs",
         "Coins from Coin Upgrade", "Coins from Coin Bonuses", "Golden bot coins earned",
         "Coins Stolen", "Coins Fetched"
@@ -120,8 +120,8 @@ const CATEGORY_FIELDS = {
         "Rend Armor Damage", "Death Ray Damage", "Smart Missile Damage"
     ],
     "Utility": [
-        "Interest Earned", "Gem Blocks Tapped", "Cells Earned", "Cells Earned Rate",
-        "Reroll Shards Earned", "Reroll Shards Earned Rate", "Rare Modules", "Inner Land Mine Damage",
+        "Interest Earned", "Gem Blocks Tapped", "Cells Earned", "Cells/hour",
+        "Reroll Shards Earned", "Reroll Shards/hour", "Rare Modules", "Inner Land Mine Damage",
         "Chain Lightning Damage", "Death Wave Damage", "Swamp Damage", "Black Hole Damage",
         "Orb Hits", "Waves Skipped", "Recovery Packages"
     ],
@@ -135,7 +135,7 @@ const CATEGORY_FIELDS = {
     ],
     "Guardian": [
         "ID", "Entry Date", "Damage", "Bounty Coins", "Guardian catches", "Coins Fetched", "Gems",
-        "Medals", "Reroll Shards", "Reroll Shards Earned Rate", "Cannon Shards", "Armor Shards",
+        "Medals", "Reroll Shards", "Reroll Shards/hour", "Cannon Shards", "Armor Shards",
         "Generator Shards", "Core Shards", "Common Modules", "Rare Modules"
     ]
 };
@@ -228,6 +228,13 @@ function deleteEntry(index) {
     entries.splice(index, 1);
     localStorage.setItem('towerTrackerEntries', JSON.stringify(entries));
     showAllCategoryTables();
+}
+
+// Add the missing saveEntry function
+function saveEntry(entry) {
+    const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
+    entries.push(entry);
+    localStorage.setItem('towerTrackerEntries', JSON.stringify(entries));
 }
 
 window.addEventListener('DOMContentLoaded', () => {
