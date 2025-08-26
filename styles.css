@@ -42,27 +42,6 @@ main {
     flex-wrap: wrap;
 }
 
-.input-area {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    max-width: 100%;
-    margin: 0 auto 1rem auto;
-}
-
-textarea#manualInput {
-    width: 100%;
-    min-width: 0;
-    max-width: 100%;
-    font-size: 1rem;
-    border-radius: var(--border-radius);
-    border: 1px solid #31343e;
-    background: var(--card-bg);
-    color: var(--text-main);
-    padding: 1rem;
-    box-sizing: border-box;
-}
-
 button, input[type="submit"] {
     background: var(--accent);
     color: #fff;
