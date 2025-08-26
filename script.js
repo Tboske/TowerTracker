@@ -9,6 +9,59 @@ function parseGameData(data) {
     entry.ID = parseInt(localStorage.getItem('towerTrackerLastNumber') || '0', 10) + 1;
     entry['Entry Date'] = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
     localStorage.setItem('towerTrackerLastNumber', entry.ID);
+
+    // Parse game time (format: 6h 13m 24s)
+    let totalHours = 0;
+    if (entry['Game Time']) {
+        let timeStr = entry['Game Time'];
+        let hours = 0, minutes = 0, seconds = 0;
+        let hMatch = timeStr.match(/(\d+)h/);
+        let mMatch = timeStr.match(/(\d+)m/);
+        let sMatch = timeStr.match(/(\d+)s/);
+        if (hMatch) hours = parseInt(hMatch[1], 10);
+        if (mMatch) minutes = parseInt(mMatch[1], 10);
+        if (sMatch) seconds = parseInt(sMatch[1], 10);
+        totalHours = hours + (minutes / 60) + (seconds / 3600);
+    }
+
+    // Calculate Coins Earned Rate (Coins/hour)
+    if (entry['Coins Earned'] && totalHours > 0) {
+        let coinsStr = entry['Coins Earned'];
+        let coins = parseFloat(coinsStr.replace(/[^\d\.]/g, ''));
+        if (coinsStr.includes('B')) coins *= 1e9;
+        else if (coinsStr.includes('M')) coins *= 1e6;
+        else if (coinsStr.includes('K')) coins *= 1e3;
+
+        let coinsPerHour = coins / totalHours;
+        if (coinsPerHour >= 1e9) entry['Coins Earned Rate'] = (coinsPerHour / 1e9).toFixed(2) + 'B/h';
+        else if (coinsPerHour >= 1e6) entry['Coins Earned Rate'] = (coinsPerHour / 1e6).toFixed(2) + 'M/h';
+        else if (coinsPerHour >= 1e3) entry['Coins Earned Rate'] = (coinsPerHour / 1e3).toFixed(2) + 'K/h';
+        else entry['Coins Earned Rate'] = coinsPerHour.toFixed(2) + '/h';
+    } else {
+        entry['Coins Earned Rate'] = 'N/A';
+    }
+
+    // Calculate Cells Earned Rate (Cells/hour)
+    if (entry['Cells Earned'] && totalHours > 0) {
+        let cells = parseFloat(entry['Cells Earned'].toString().replace(/[^\d\.]/g, ''));
+        let cellsPerHour = cells / totalHours;
+        entry['Cells Earned Rate'] = cellsPerHour.toFixed(2) + '/h';
+    } else {
+        entry['Cells Earned Rate'] = 'N/A';
+    }
+
+    // Calculate Reroll Shards Earned Rate (Reroll Shards/hour)
+    if (entry['Reroll Shards Earned'] && totalHours > 0) {
+        let shardsStr = entry['Reroll Shards Earned'];
+        let shards = parseFloat(shardsStr.replace(/[^\d\.]/g, ''));
+        if (shardsStr.includes('K')) shards *= 1e3;
+        let shardsPerHour = shards / totalHours;
+        if (shardsPerHour >= 1e3) entry['Reroll Shards Earned Rate'] = (shardsPerHour / 1e3).toFixed(2) + 'K/h';
+        else entry['Reroll Shards Earned Rate'] = shardsPerHour.toFixed(2) + '/h';
+    } else {
+        entry['Reroll Shards Earned Rate'] = 'N/A';
+    }
+
     return entry;
 }
 
@@ -72,6 +125,171 @@ function getAllKeys(entries) {
     }, new Set());
     const keys = Array.from(keysSet).filter(k => k !== 'ID' && k !== 'Entry Date' && k !== '_averages');
     return ['ID', 'Entry Date', ...keys, '_averages'];
+}
+
+// Define fields for each category
+const CATEGORY_FIELDS = {
+    "Battle Report": [
+        "ID",
+        "Entry Date",
+        "Game Time",
+        "Real Time",
+        "Wave",
+        "Coins Earned",
+        "Coins Earned Rate",
+        "Cash Earned",
+        "Cash Earning Rate",
+        "Interest Earned",
+        "Gem Blocks Tapped",
+        "Cells Earned",
+        "Cells Earned Rate",
+        "Reroll Shards Earned",
+        "Reroll Shards Earned Rate"
+    ],
+    "Coins": [
+        "ID",
+        "Entry Date",
+        "Coins Earned",
+        "Coins Earned Rate",
+        "Coins from Death Wave",
+        "Coins from Golden Tower",
+        "Coins from Blackhole",
+        "Coins from Spotlight",
+        "Coins from Orbs",
+        "Coins from Coin Upgrade",
+        "Coins from Coin Bonuses",
+        "Golden bot coins earned",
+        "Coins Stolen",
+        "Coins Fetched"
+    ],
+    "Combat": [
+        "Damage Dealt Rate",
+        "Damage Taken",
+        "Damage Taken Wall",
+        "Damage Taken While Berserked",
+        "Damage Gain From Berserk",
+        "Death Defy",
+        "Lifesteal",
+        "Damage Dealt",
+        "Projectiles Damage",
+        "Projectiles Count",
+        "Thorn Damage",
+        "Orb Damage",
+        "Land Mine Damage",
+        "Land Mines Spawned",
+        "Rend Armor Damage",
+        "Death Ray Damage",
+        "Smart Missile Damage"
+    ],
+    "Utility": [
+        "Interest Earned",
+        "Gem Blocks Tapped",
+        "Cells Earned",
+        "Cells Earned Rate",
+        "Reroll Shards Earned",
+        "Reroll Shards Earned Rate",
+        "Rare Modules",
+        "Inner Land Mine Damage",
+        "Chain Lightning Damage",
+        "Death Wave Damage",
+        "Swamp Damage",
+        "Black Hole Damage",
+        "Orb Hits",
+        "Waves Skipped",
+        "Recovery Packages"
+    ],
+    "Enemies Destroyed": [
+        "Destroyed by Orbs", "Destroyed by Thorns", "Destroyed by Death ray", "Destroyed by Land Mine",
+        "Total Enemies", "Basic", "Fast", "Tank", "Ranged", "Boss", "Protector", "Total Elites",
+        "Vampires", "Rays", "Scatters", "Saboteurs", "Commanders", "Overcharges"
+    ],
+    "Bots": [
+        "Flame bot damage", "Thunder bot stuns", "Golden bot coins earned", "Coins Stolen"
+    ],
+    "Guardian": [
+        "ID",
+        "Entry Date",
+        "Damage",
+        "Bounty Coins",
+        "Guardian catches",
+        "Coins Fetched",
+        "Gems",
+        "Medals",
+        "Reroll Shards",
+        "Reroll Shards Earned Rate",
+        "Cannon Shards",
+        "Armor Shards",
+        "Generator Shards",
+        "Core Shards",
+        "Common Modules",
+        "Rare Modules"
+    ]
+};
+
+// Utility to get keys for a category, always include ID and Entry Date
+function getCategoryKeys(category, entries) {
+    // Always include all columns defined for the category
+    const categoryFields = CATEGORY_FIELDS[category];
+    // Always include ID and Entry Date at the start
+    return ['ID', 'Entry Date', ...categoryFields.filter(k => k !== 'ID' && k !== 'Entry Date')];
+}
+
+// Render a table for a category
+function showCategoryTable(category, entries, sortKey = null, asc = true) {
+    const keys = getCategoryKeys(category, entries);
+    if (keys.length === 0) return '';
+
+    // Sort entries if needed
+    let sortedEntries = [...entries];
+    if (sortKey && keys.includes(sortKey)) {
+        sortedEntries.sort((a, b) => {
+            let va = a[sortKey] || '';
+            let vb = b[sortKey] || '';
+            let na = parseFloat(va.replace(/[^\d\.\-]/g, ''));
+            let nb = parseFloat(vb.replace(/[^\d\.\-]/g, ''));
+            if (!isNaN(na) && !isNaN(nb)) return asc ? na - nb : nb - na;
+            if (va < vb) return asc ? -1 : 1;
+            if (va > vb) return asc ? 1 : -1;
+            return 0;
+        });
+    }
+
+    // Table HTML
+    let html = `<section class="category-table">
+        <h2>${category}</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th class="delete-col"></th>
+                    ${keys.map(k => `<th onclick="orderByCategoryColumn('${category}','${k}')" style="cursor:pointer;">${k}</th>`).join('')}
+                </tr>
+            </thead>
+            <tbody>
+                ${sortedEntries.map((entry, idx) => `<tr>
+                    <td class="delete-col">
+                        <button onclick="deleteEntry(${idx})" title="Delete" class="delete-btn">&#10060;</button>
+                    </td>
+                    ${keys.map(k => `<td>${entry[k] || ''}</td>`).join('')}
+                </tr>`).join('')}
+            </tbody>
+        </table>
+    </section>`;
+    return html;
+}
+
+// Render all category tables
+function showAllCategoryTables() {
+    const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
+    const container = document.getElementById('entriesTablesContainer');
+    if (!container) {
+        const div = document.createElement('div');
+        div.id = 'entriesTablesContainer';
+        document.querySelector('main').appendChild(div);
+    }
+    const target = document.getElementById('entriesTablesContainer');
+    target.innerHTML = Object.keys(CATEGORY_FIELDS)
+        .map(cat => showCategoryTable(cat, entries))
+        .join('');
 }
 
 let currentSort = { key: null, asc: true };
@@ -162,12 +380,16 @@ window.orderByColumn = function(key) {
     showEntries(selectedKeys, currentSort.key, currentSort.asc);
 };
 
+window.orderByCategoryColumn = function(category, key) {
+    // Save sort state per category if needed
+    showAllCategoryTables(); // Re-render with new sort (implement state if you want persistent sorting)
+};
+
 function deleteEntry(index) {
     const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
     entries.splice(index, 1);
     localStorage.setItem('towerTrackerEntries', JSON.stringify(entries));
-    const allKeys = getAllKeys(entries);
-    showEntries(allKeys, currentSort.key, currentSort.asc);
+    showAllCategoryTables();
 }
 
 function showColumnSelector() {
@@ -223,7 +445,7 @@ document.getElementById('pasteClipboardBtn').addEventListener('click', async () 
         if (validLines.length > 5) {
             const entry = parseGameData(text);
             saveEntry(entry);
-            showEntries();
+            showAllCategoryTables();
             alert('Parsed successfully!');
         } else {
             alert('Parse failed!');
@@ -233,10 +455,9 @@ document.getElementById('pasteClipboardBtn').addEventListener('click', async () 
     }
 });
 
+// On page load, show all tables
 window.addEventListener('DOMContentLoaded', () => {
-    const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
-    const allKeys = getAllKeys(entries);
-    showEntries(allKeys);
+    showAllCategoryTables();
     addColumnSelectorButton();
 });
 
