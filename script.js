@@ -1,17 +1,29 @@
 function parseGameData(data) {
-    const lines = data.trim().split('\n');
     const entry = {};
+    // Split into lines and filter out empty lines
+    const lines = data.split(/\r?\n/).map(line => line.trim()).filter(line => line.length > 0);
+
     lines.forEach(line => {
-        // Split on first whitespace (space or tab)
-        const match = line.match(/^(.+?)\s+(.+)$/);
-        if (match) entry[match[1].trim()] = match[2].trim();
+        // Split on first occurrence of two or more spaces, tab, or colon
+        let match = line.match(/^(.+?)(?:\s{2,}|\t|:)\s*(.+)$/);
+        if (!match) {
+            // If not matched, try splitting on first single space
+            match = line.match(/^(.+?)\s+(.+)$/);
+        }
+        if (match) {
+            const key = match[1].trim();
+            const value = match[2].trim();
+            entry[key] = value;
+        }
     });
+
+    // Add ID and Entry Date
     const now = new Date();
     entry.ID = parseInt(localStorage.getItem('towerTrackerLastNumber') || '0', 10) + 1;
     entry['Entry Date'] = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
     localStorage.setItem('towerTrackerLastNumber', entry.ID);
 
-    // Parse game time (format: 6h 13m 24s)
+    // Calculate rates if possible
     let totalHours = 0;
     if (entry['Game Time']) {
         let timeStr = entry['Game Time'];
@@ -25,14 +37,13 @@ function parseGameData(data) {
         totalHours = hours + (minutes / 60) + (seconds / 3600);
     }
 
-    // Calculate Coins Earned Rate (Coins/hour)
+    // Coins Earned Rate
     if (entry['Coins Earned'] && totalHours > 0) {
         let coinsStr = entry['Coins Earned'];
         let coins = parseFloat(coinsStr.replace(/[^\d\.]/g, ''));
         if (coinsStr.includes('B')) coins *= 1e9;
         else if (coinsStr.includes('M')) coins *= 1e6;
         else if (coinsStr.includes('K')) coins *= 1e3;
-
         let coinsPerHour = coins / totalHours;
         if (coinsPerHour >= 1e9) entry['Coins Earned Rate'] = (coinsPerHour / 1e9).toFixed(2) + 'B/h';
         else if (coinsPerHour >= 1e6) entry['Coins Earned Rate'] = (coinsPerHour / 1e6).toFixed(2) + 'M/h';
@@ -42,16 +53,16 @@ function parseGameData(data) {
         entry['Coins Earned Rate'] = 'N/A';
     }
 
-    // Calculate Cells Earned Rate (Cells/hour)
+    // Cells Earned Rate
     if (entry['Cells Earned'] && totalHours > 0) {
-        let cells = parseFloat(entry['Cells Earned'].toString().replace(/[^\d\.]/g, ''));
+        let cells = parseFloat(entry['Cells Earned'].replace(/[^\d\.]/g, ''));
         let cellsPerHour = cells / totalHours;
         entry['Cells Earned Rate'] = cellsPerHour.toFixed(2) + '/h';
     } else {
         entry['Cells Earned Rate'] = 'N/A';
     }
 
-    // Calculate Reroll Shards Earned Rate (Reroll Shards/hour)
+    // Reroll Shards Earned Rate
     if (entry['Reroll Shards Earned'] && totalHours > 0) {
         let shardsStr = entry['Reroll Shards Earned'];
         let shards = parseFloat(shardsStr.replace(/[^\d\.]/g, ''));
