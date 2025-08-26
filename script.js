@@ -134,151 +134,15 @@ function getCategoryKeys(category) {
     return ['ID', 'Entry Date', ...categoryFields.filter(k => k !== 'ID' && k !== 'Entry Date')];
 }
 
-// Table/column visibility
+// Always show all tables and columns
 function getVisibleTables() {
-    const stored = localStorage.getItem('towerTrackerVisibleTables');
-    if (stored) return JSON.parse(stored);
     return Object.keys(CATEGORY_FIELDS).reduce((obj, cat) => { obj[cat] = true; return obj; }, {});
 }
-function setVisibleTables(obj) {
-    localStorage.setItem('towerTrackerVisibleTables', JSON.stringify(obj));
-}
 function getVisibleColumns(table) {
-    const stored = localStorage.getItem('towerTrackerVisibleColumns');
-    if (stored) {
-        const obj = JSON.parse(stored);
-        return obj[table] || getCategoryKeys(table);
-    }
     return getCategoryKeys(table);
-}
-function setVisibleColumns(table, columns) {
-    let obj = {};
-    const stored = localStorage.getItem('towerTrackerVisibleColumns');
-    if (stored) obj = JSON.parse(stored);
-    obj[table] = columns;
-    localStorage.setItem('towerTrackerVisibleColumns', JSON.stringify(obj));
-}
-
-// Settings panel
-function showSettings() {
-    const tables = Object.keys(CATEGORY_FIELDS);
-    const visibleTables = getVisibleTables();
-    let settingsDiv = document.getElementById('settingsPanel');
-    let overlay = document.getElementById('settingsOverlay');
-
-    if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.id = 'settingsOverlay';
-        document.body.appendChild(overlay);
-    }
-    overlay.style.display = 'block';
-
-    if (!settingsDiv) {
-        settingsDiv = document.createElement('div');
-        settingsDiv.id = 'settingsPanel';
-        document.body.appendChild(settingsDiv);
-    }
-
-    let html = `
-        <div class="settings-content">
-            <strong>Show/Hide Tables & Columns</strong>
-            ${tables.map(table => {
-                const columns = getCategoryKeys(table);
-                const visibleCols = getVisibleColumns(table);
-                return `
-                <div class="settings-table-group">
-                    <label class="settings-table-title">
-                        <input type="checkbox" class="table-toggle" data-table="${table}" ${visibleTables[table] ? 'checked' : ''}>
-                        ${table}
-                    </label>
-                    <div class="settings-columns-list">
-                        ${columns.map(col => `
-                            <label>
-                                <input type="checkbox" class="col-toggle" data-table="${table}" value="${col}" ${visibleCols.includes(col) ? 'checked' : ''}>
-                                ${col}
-                            </label>
-                        `).join('')}
-                    </div>
-                </div>`;
-            }).join('')}
-        </div>
-        <div class="settings-actions">
-            <button id="settingsApplyBtn" style="background:#4f8cff;color:#fff;border:none;padding:0.5rem 1.2rem;border-radius:6px;cursor:pointer;">Apply</button>
-            <button id="settingsCancelBtn" style="background:#31343e;color:#fff;border:none;padding:0.5rem 1.2rem;border-radius:6px;cursor:pointer;">Cancel</button>
-        </div>
-    `;
-    settingsDiv.innerHTML = html;
-    settingsDiv.style.display = 'flex';
-
-    document.getElementById('settingsCancelBtn').onclick = () => {
-        settingsDiv.style.display = 'none';
-        overlay.style.display = 'none';
-    };
-
-    document.getElementById('settingsApplyBtn').onclick = () => {
-        // Tables
-        const tableToggles = settingsDiv.querySelectorAll('.table-toggle');
-        let newVisibleTables = {};
-        tableToggles.forEach(cb => {
-            newVisibleTables[cb.dataset.table] = cb.checked;
-        });
-        setVisibleTables(newVisibleTables);
-
-        // Columns
-        let newVisibleColumns = {};
-        tables.forEach(table => {
-            const colToggles = settingsDiv.querySelectorAll(`.col-toggle[data-table="${table}"]`);
-            newVisibleColumns[table] = Array.from(colToggles).filter(cb => cb.checked).map(cb => cb.value);
-        });
-        localStorage.setItem('towerTrackerVisibleColumns', JSON.stringify(newVisibleColumns));
-
-        showAllCategoryTables();
-        settingsDiv.style.display = 'none';
-        overlay.style.display = 'none';
-    };
-
-    overlay.onclick = function () {
-        settingsDiv.style.display = 'none';
-        overlay.style.display = 'none';
-    };
 }
 
 // Table rendering
-function showCategoryTable(category, entries) {
-    const visibleTables = getVisibleTables();
-    if (!visibleTables[category]) return '';
-    const keys = getVisibleColumns(category);
-    if (keys.length === 0) return '';
-
-    // Invert table: headers as first column, values as subsequent columns
-    let html = `<section class="category-table">
-        <h2>${category}</h2>
-        <div style="overflow-x:auto;">
-        <table>
-            <thead>
-                <tr>
-                    <th style="min-width:120px;">Field</th>
-                    ${entries.map((entry, idx) =>
-                        `<th style="min-width:80px;">#${entry.ID || idx + 1}
-                            <button onclick="deleteEntry(${idx})" title="Delete" class="delete-btn">&#10060;</button>
-                        </th>`
-                    ).join('')}
-                </tr>
-            </thead>
-            <tbody>
-                ${keys.map(key => `
-                    <tr>
-                        <td><strong>${key}</strong></td>
-                        ${entries.map(entry => `<td>${entry[key] || ''}</td>`).join('')}
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-        </div>
-    </section>`;
-    return html;
-}
-
 function showCombinedTable(entries) {
     // Sort entries by most recent (highest ID) first
     const sortedEntries = [...entries].sort((a, b) => (b.ID || 0) - (a.ID || 0));
@@ -349,21 +213,12 @@ function showAllCategoryTables() {
     target.innerHTML = showCombinedTable(entries);
 }
 
-let currentSort = { key: null, asc: true };
-
-window.orderByCategoryColumn = function(category, key) {
-    // Save sort state per category if needed
-    showAllCategoryTables(); // Re-render with new sort (implement state if you want persistent sorting)
-};
-
 function deleteEntry(index) {
     const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
     entries.splice(index, 1);
     localStorage.setItem('towerTrackerEntries', JSON.stringify(entries));
     showAllCategoryTables();
 }
-
-document.getElementById('settingsBtn').onclick = showSettings;
 
 window.addEventListener('DOMContentLoaded', () => {
     showAllCategoryTables();
@@ -402,11 +257,11 @@ document.getElementById('helpBtn').onclick = function() {
     alert(
         "TowerTracker Help:\n\n" +
         "- Click 'Paste & Parse Clipboard' to import and save your game stats from the clipboard.\n" +
-        "- Use the gear button to show/hide tables and columns.\n" +
+        "- Paste your data in the input box and click 'Parse Input' to add manually.\n" +
         "- Click the red X to delete an entry.\n" +
-        "- Click column headers to sort.\n" +
         "- Your data is saved locally in your browser."
     );
 };
 
-document.getElementById('pasteClipboardBtn').disabled = true;
+// Optionally disable clipboard button if you want
+// document.getElementById('pasteClipboardBtn').disabled = true;
