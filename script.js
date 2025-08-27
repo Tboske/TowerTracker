@@ -161,12 +161,37 @@ document.getElementById('pasteClipboardBtn').addEventListener('click', async () 
     }
 });
 
-document.getElementById('helpBtn').onclick = function() {
-    alert(
-        "TowerTracker Help:\n\n" +
-        "- Click 'Paste & Parse Clipboard' to import and save your game stats from the clipboard.\n" +
-        "- Paste your data in the input box and click 'Parse Input' to add manually.\n" +
-        "- Click the red X to delete an entry.\n" +
-        "- Your data is saved locally in your browser."
-    );
-};
+// Add this function to show the help popup with images
+function showHelpPopup() {
+    // Create overlay
+    let overlay = document.createElement('div');
+    overlay.className = 'help-overlay';
+    overlay.innerHTML = `
+        <div class="help-popup">
+            <h2>How to Copy Your Stats</h2>
+            <ol>
+                <li>
+                    <span>At the end of a round, tap <b>MORE STATS</b> (see below):</span><br>
+                    <img src="Help1.jpg" alt="Tap MORE STATS" class="help-img">
+                </li>
+                <li>
+                    <span>Then tap the <b>clipboard icon</b> at the bottom right to copy your stats:</span><br>
+                    <img src="Help2.jpg" alt="Tap clipboard icon" class="help-img">
+                </li>
+                <li>
+                    <span>Paste the copied stats into TowerTracker using the <b>Insert Clipboard</b> button.</span>
+                </li>
+            </ol>
+            <button class="close-help-btn">Close</button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    // Close button handler
+    overlay.querySelector('.close-help-btn').onclick = () => {
+        overlay.remove();
+    };
+}
+
+// Attach to help button
+document.getElementById('helpBtn').onclick = showHelpPopup;
