@@ -99,7 +99,9 @@ button:active, input[type="submit"]:active {
     padding: 0.5rem;
     max-width: 100vw;
     overflow-x: auto;
+    overflow-y: auto;      /* <-- Add this line to enable vertical scrolling */
     position: relative;
+    max-height: 70vh;      /* <-- Add this line to limit height and allow scrolling */
 }
 
 /* Remove the left mask/fade effect for sticky first column */
