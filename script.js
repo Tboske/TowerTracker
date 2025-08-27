@@ -117,7 +117,7 @@ function showAllCategoryTables() {
     }
     const target = document.getElementById('entriesTablesContainer');
     if (!entries.length) {
-        target.innerHTML = `<div class="no-entries-msg">Feed me some stats</div>`;
+        target.innerHTML = `<div class="no-entries-msg">Feed me some Tower Stats</div>`;
     } else {
         target.innerHTML = showCombinedTable(entries);
     }
