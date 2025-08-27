@@ -116,7 +116,11 @@ function showAllCategoryTables() {
         document.querySelector('main').appendChild(div);
     }
     const target = document.getElementById('entriesTablesContainer');
-    target.innerHTML = showCombinedTable(entries);
+    if (!entries.length) {
+        target.innerHTML = `<div class="no-entries-msg">Feed me some stats</div>`;
+    } else {
+        target.innerHTML = showCombinedTable(entries);
+    }
 }
 
 function deleteEntry(index) {

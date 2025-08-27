@@ -395,3 +395,12 @@ footer {
     font-weight: bold;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
+
+.no-entries-msg {
+    text-align: center;
+    font-size: 1.5em;
+    color: var(--accent, #4f8cff);
+    margin: 2em 0;
+    font-weight: bold;
+    opacity: 0.85;
+}
