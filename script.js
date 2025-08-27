@@ -161,39 +161,10 @@ document.getElementById('pasteClipboardBtn').addEventListener('click', async () 
     }
 });
 
-// Add this function to show the help popup with images
-function showHelpPopup() {
-    // Create overlay
-    let overlay = document.createElement('div');
-    overlay.className = 'help-overlay';
-    overlay.innerHTML = `
-        <div class="help-popup">
-            <h2>How to Copy Your Stats</h2>
-            <ol>
-                <li>
-                    <span>At the end of a round, tap <b>MORE STATS</b> (see below):</span><br>
-                    <img src="Help1.jpg" alt="Tap MORE STATS" class="help-img">
-                </li>
-                <li>
-                    <span>Then tap the <b>clipboard icon</b> at the bottom right to copy your stats:</span><br>
-                    <img src="Help2.jpg" alt="Tap clipboard icon" class="help-img">
-                </li>
-                <li>
-                    <span>Paste the copied stats into TowerTracker using the <b>Insert Clipboard</b> button.</span>
-                </li>
-            </ol>
-            <div class="local-storage-info">
-                <strong>Note:</strong> All your TowerTracker data is saved locally on this device and is <u>not (yet) transferable</u> to other devices.
-            </div>
-            <button class="close-help-btn">Close</button>
-        </div>
-    `;
-    document.body.appendChild(overlay);
-
-    // Close button handler
-    overlay.querySelector('.close-help-btn').onclick = () => {
-        overlay.remove();
-    };
-}
-
-document.getElementById('helpBtn').onclick = showHelpPopup;
+// Show/hide the help overlay using the HTML in index.html
+document.getElementById('helpBtn').onclick = function() {
+    document.querySelector('.help-overlay').style.display = 'flex';
+};
+document.querySelector('.close-help-btn').onclick = function() {
+    document.querySelector('.help-overlay').style.display = 'none';
+};
