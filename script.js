@@ -182,6 +182,9 @@ function showHelpPopup() {
                     <span>Paste the copied stats into TowerTracker using the <b>Insert Clipboard</b> button.</span>
                 </li>
             </ol>
+            <div class="local-storage-info">
+                <strong>Note:</strong> All your TowerTracker data is saved locally on this device and is <u>not (yet) transferable</u> to other devices.
+            </div>
             <button class="close-help-btn">Close</button>
         </div>
     `;
@@ -193,5 +196,4 @@ function showHelpPopup() {
     };
 }
 
-// Attach to help button
 document.getElementById('helpBtn').onclick = showHelpPopup;
