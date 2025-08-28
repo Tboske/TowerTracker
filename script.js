@@ -1,12 +1,12 @@
 // Update CATEGORY_FIELDS to only use /hour keys for rates
 const CATEGORY_FIELDS = {
     "Battle Report": [
-        "ID", "Entry Date", "Game Time", "Real Time", "Wave", "Coins Earned", "Coins/hour",
+        "Game Time", "Real Time", "Wave", "Coins Earned", "Coins/hour",
         "Cash Earned", "Cash/hour", "Interest Earned", "Gem Blocks Tapped",
         "Cells Earned", "Cells/hour", "Reroll Shards Earned", "Reroll Shards/hour"
     ],
     "Coins": [
-        "ID", "Entry Date", "Coins Earned", "Coins/hour", "Coins from Death Wave",
+        "Coins Earned", "Coins/hour", "Coins from Death Wave",
         "Coins from Golden Tower", "Coins from Blackhole", "Coins from Spotlight", "Coins from Orbs",
         "Coins from Coin Upgrade", "Coins from Coin Bonuses", "Golden bot coins earned",
         "Coins Stolen", "Coins Fetched"
@@ -32,18 +32,20 @@ const CATEGORY_FIELDS = {
         "Flame bot damage", "Thunder bot stuns", "Golden bot coins earned", "Coins Stolen"
     ],
     "Guardian": [
-        "ID", "Entry Date", "Damage", "Guardian catches", "Coins Fetched", "Gems",
+        "Damage", "Guardian catches", "Coins Fetched", "Gems",
         "Medals", "Reroll Shards", "Reroll Shards/hour", "Cannon Shards", "Armor Shards",
         "Generator Shards", "Core Shards", "Common Modules", "Rare Modules"
     ]
 };
 
+// Utility functions
 function getCategoryKeys(category) {
     const categoryFields = CATEGORY_FIELDS[category];
-    return ['ID', 'Entry Date', ...categoryFields.filter(k => k !== 'ID' && k !== 'Entry Date')];
+    if (category === "Battle Report") {
+        return categoryFields;
+    }
+    return categoryFields;
 }
-
-// Always show all tables and columns
 function getVisibleTables() {
     return Object.keys(CATEGORY_FIELDS).reduce((obj, cat) => { obj[cat] = true; return obj; }, {});
 }
@@ -53,23 +55,23 @@ function getVisibleColumns(table) {
 
 // Table rendering
 function showCombinedTable(entries) {
-    // Sort entries by most recent (highest ID) first
+    if (!entries.length) return '';
     const sortedEntries = [...entries].sort((a, b) => (b.ID || 0) - (a.ID || 0));
-    if (!sortedEntries.length) return '';
-
-    // Gather all visible keys per category, skipping ID and Entry Date for categories
     const visibleTables = getVisibleTables();
     const categories = Object.keys(CATEGORY_FIELDS).filter(cat => visibleTables[cat]);
     let allKeys = [];
     let sectionRows = [];
     categories.forEach(category => {
-        const keys = getVisibleColumns(category).filter(k => k !== 'ID' && k !== 'Entry Date');
+        const keys = getVisibleColumns(category).filter(k => {
+            if (category === "Battle Report") return true;
+            return k !== 'ID' && k !== 'Entry Date';
+        });
         if (!keys.length) return;
         sectionRows.push({ label: category, index: allKeys.length });
         allKeys = allKeys.concat(keys);
     });
 
-    // Table HTML (no "All Data" and no "Field" header)
+    // Table HTML
     let html = `<section class="category-table">
         <div class="table-scroll-x">
         <table>
@@ -87,7 +89,6 @@ function showCombinedTable(entries) {
             </thead>
             <tbody>
                 ${allKeys.map((key, i) => {
-                    // Insert section row if needed
                     const section = sectionRows.find(s => s.index === i);
                     let sectionHtml = '';
                     if (section) {
@@ -107,49 +108,47 @@ function showCombinedTable(entries) {
     return html;
 }
 
-function showAllCategoryTables() {
-    const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
-    const container = document.getElementById('entriesTablesContainer');
-    if (!container) {
-        const div = document.createElement('div');
-        div.id = 'entriesTablesContainer';
-        document.querySelector('main').appendChild(div);
-    }
-    const target = document.getElementById('entriesTablesContainer');
-    if (!entries.length) {
-        target.innerHTML = `<div class="no-entries-msg">Feed me some Tower Stats</div>`;
-    } else {
-        target.innerHTML = showCombinedTable(entries);
-    }
+// Entry management
+function getEntries() {
+    return JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
 }
-
-function deleteEntry(index) {
-    const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
-    entries.splice(index, 1);
+function setEntries(entries) {
     localStorage.setItem('towerTrackerEntries', JSON.stringify(entries));
-    showAllCategoryTables();
 }
-
 function saveEntry(entry) {
-    const entries = JSON.parse(localStorage.getItem('towerTrackerEntries') || '[]');
+    const entries = getEntries();
     entries.push(entry);
-    localStorage.setItem('towerTrackerEntries', JSON.stringify(entries));
+    setEntries(entries);
+}
+function deleteEntry(index) {
+    const entries = getEntries();
+    entries.splice(index, 1);
+    setEntries(entries);
+    showAllCategoryTables();
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-    showAllCategoryTables();
-});
+// Main rendering
+function showAllCategoryTables() {
+    const entries = getEntries();
+    let container = document.getElementById('entriesTablesContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'entriesTablesContainer';
+        document.querySelector('main').appendChild(container);
+    }
+    container.innerHTML = entries.length
+        ? showCombinedTable(entries)
+        : `<div class="no-entries-msg">Feed me some Tower Stats</div>`;
+}
 
-document.getElementById('pasteClipboardBtn').addEventListener('click', async () => {
+// Clipboard parsing
+async function handlePasteClipboard() {
     try {
         const text = await navigator.clipboard.readText();
         if (text.trim().length > 0) {
             const entry = parseGameData(text);
-
-            // Require all of these keys for valid input
             const requiredKeys = ["Tier", "Wave", "Game Time", "Coins Earned", "Cells Earned"];
             const hasAllRequired = requiredKeys.every(k => Object.keys(entry).includes(k));
-
             if (hasAllRequired) {
                 saveEntry(entry);
                 showAllCategoryTables();
@@ -163,12 +162,20 @@ document.getElementById('pasteClipboardBtn').addEventListener('click', async () 
     } catch (err) {
         alert('Failed to read clipboard!');
     }
-});
+}
 
-// Show/hide the help overlay using the HTML in index.html
-document.getElementById('helpBtn').onclick = function() {
+// Help overlay
+function showHelpOverlay() {
     document.querySelector('.help-overlay').style.display = 'flex';
-};
-document.querySelector('.close-help-btn').onclick = function() {
+}
+function hideHelpOverlay() {
     document.querySelector('.help-overlay').style.display = 'none';
-};
+}
+
+// Initialization
+window.addEventListener('DOMContentLoaded', () => {
+    showAllCategoryTables();
+    document.getElementById('pasteClipboardBtn').addEventListener('click', handlePasteClipboard);
+    document.getElementById('helpBtn').onclick = showHelpOverlay;
+    document.querySelector('.close-help-btn').onclick = hideHelpOverlay;
+});
