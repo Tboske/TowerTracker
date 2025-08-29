@@ -38,7 +38,7 @@ main {
     box-sizing: border-box;
 }
 
-.top-actions {
+.buttonBar {
     position: fixed;
     left: 0;
     bottom: 0;
