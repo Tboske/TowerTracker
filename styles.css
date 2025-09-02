@@ -56,6 +56,40 @@ main {
     box-sizing: border-box;
 }
 
+.buttonBar button {
+    flex: 1 1 0;
+    min-width: 0;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    margin: 0;
+    height: 48px;
+    font-size: 1.2em;
+    font-family: 'Segoe UI', 'Arial', sans-serif;
+    font-weight: 600;
+    color: #fff;
+    background: var(--accent);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: filter 0.2s, transform 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 0.05em;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    user-select: none;
+    padding: 0;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+.buttonBar button:hover {
+    filter: brightness(1.15);
+    transform: scale(1.05);
+}
+
 button, input[type="submit"] {
     background: var(--accent);
     color: #fff;
@@ -73,22 +107,6 @@ button, input[type="submit"] {
 
 button:active, input[type="submit"]:active {
     background: #3563c1;
-}
-
-.help-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1.3em;
-    color: #4f8cff;
-    line-height: 1;
-    padding: 0;
-    width: 36px;
-    height: 36px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    vertical-align: middle;
 }
 
 .category-table {
