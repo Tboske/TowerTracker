@@ -130,10 +130,10 @@ function deleteEntry(index) {
 // Main rendering
 function showAllCategoryTables() {
     const entries = getEntries();
-    let container = document.getElementById('entriesTablesContainer');
+    let container = document.getElementById('entriesPanel');
     if (!container) {
         container = document.createElement('div');
-        container.id = 'entriesTablesContainer';
+        container.id = 'entriesPanel';
         document.querySelector('main').appendChild(container);
     }
     container.innerHTML = entries.length
