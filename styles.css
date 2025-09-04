@@ -212,15 +212,30 @@ button:active, input[type="submit"]:active {
     background: var(--card-bg);
 }
 
-.category-table .section-row td {
+.category-table .section-row {
+    background: var(--accent, #4f8cff);
+    color: #fff;
+    font-weight: bold;
+    text-align: left;
+    font-size: 1.05em;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    border-radius: var(--border-radius);
+    position: relative;
+}
+
+/* Unified styling for section-row sticky-col and colspan cells */
+.category-table .section-row .sticky-col,
+.category-table .section-row td[colspan] {
     background: var(--accent);
     color: #fff;
     font-weight: bold;
     text-align: left;
     position: sticky;
     left: 0;
-    top: 0;
     z-index: 20;
+    font-size: 1.05em;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    padding: 6px;
 }
 
 /* For entry ID and date cell formatting */
@@ -372,7 +387,7 @@ footer {
     background: var(--card-bg);
 }
 
-/* Section header row style */
+/* Sticky section-row for desktop and mobile */
 .section-row td {
     background: var(--accent);
     color: #fff;
@@ -382,6 +397,23 @@ footer {
     left: 0;
     top: 0;
     z-index: 20;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Ensure parent row is relatively positioned */
+.section-row {
+    position: relative;
+}
+
+/* Responsive: make sure sticky works on mobile too */
+@media (max-width: 600px) {
+    .section-row td {
+        left: 0;
+        top: 0;
+        width: 100vw;
+        max-width: 100vw;
+    }
 }
 
 /* Entry ID and date formatting */
@@ -480,3 +512,8 @@ footer {
     min-width: 280px;
     min-height: 350px;
 }
+
+.category-table .section-row .sticky-col {
+    z-index: 22; 
+}
+

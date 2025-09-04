@@ -93,7 +93,8 @@ function showCombinedTable(entries) {
                     let sectionHtml = '';
                     if (section) {
                         sectionHtml = `<tr class="section-row">
-                            <td colspan="${sortedEntries.length + 1}">${section.label}</td>
+                            <td class="sticky-col"><strong>${section.label}</strong></td>
+                            <td colspan="${sortedEntries.length}"></td>
                         </tr>`;
                     }
                     return sectionHtml + `<tr>
