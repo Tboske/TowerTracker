@@ -179,4 +179,16 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('pasteClipboardBtn').addEventListener('click', handlePasteClipboard);
     document.getElementById('helpBtn').onclick = showHelpOverlay;
     document.querySelector('.close-help-btn').onclick = hideHelpOverlay;
+
+    // Only enable buttons with handlers
+    const buttonEvents = {
+        helpBtn: showHelpOverlay,
+        pasteClipboardBtn: handlePasteClipboard,
+    };
+
+    document.querySelectorAll('.buttonBar button').forEach(btn => {
+        if (!buttonEvents[btn.id]) {
+            btn.disabled = true;
+        }
+    });
 });
